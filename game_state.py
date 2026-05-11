@@ -63,15 +63,18 @@ class GameState:
         
         return False
 
-    def is_valid_move(self, player_id, move_from, move_to):
+    def is_valid_move(self, player_id, path):
+
+        if len(path) < 2:
+            return False, "Invalid move."
+        
+        move_from = path[0]
+        move_to = path[-1]
 
         # Is source tile valid?
         if move_from not in self.board:
             return False, "Invalid source tile."
 
-        # Is source tile valid?
-        if move_to not in self.board:
-            return False, "Invalid destination tile."
         
         # Is there actually a piece there?
         if self.board[move_from] is None:
@@ -81,17 +84,55 @@ class GameState:
         if self.board[move_from] != player_id + 1:
             return False, "Not your piece."
 
-        # Is destination occupied?
-        if self.board[move_to] is not None:
-            return False, "Destination occupied."
+        # -------------
+        # Adjacent move
+        # -------------
 
-        if self.is_adjacent_move(move_from, move_to):
-            return True, ""
-        
-        if self.is_jump_move(move_from, move_to):
-            return True, ""
-        
-        return False, "Illegal move."
+        if len(path) == 2:
+
+            destination = path[1]
+
+            # Is destination tile valid?
+            if destination not in self.board:
+                return False, "Invalid destination tile."
+
+            # Is destination occupied?
+            if self.board[destination] is not None:
+                return False, "Destination occupied."
+
+            if self.is_adjacent_move(move_from, destination):
+                return True, ""
+            
+        #-----------
+        # Jump chain
+        #-----------
+
+        visited = set()
+
+        for i in range(len(path) - 1):
+
+            current = path[i]
+            nxt = path[i + 1]
+
+            # Prevent loops
+            if nxt in visited:
+                return False, "Cannot revisit tiles."
+            
+            visited.add(current)
+
+            # Destination must exist
+            if nxt not in self.board:
+                return False, "Invalid destination tile."
+            
+            # Destination must be empty
+            if self.board[nxt] is not None:
+                return False, "Destination occupied."
+            
+            # Must be a legal jump
+            if not self.is_jump_move(current, nxt):
+                return False, "Illegal jump."
+
+        return True, ""
             
     def apply_move(self, move_from, move_to):
 

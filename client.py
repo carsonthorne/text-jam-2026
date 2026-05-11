@@ -92,19 +92,35 @@ def input_loop(client):
         move = input("Enter move (example B2 D4): ")
 
         try:
-            move_from, move_to = move.split()
 
-            move_from_coord = renderer.get_coord(move_from)
-            move_to_coord = renderer.get_coord(move_to)
+            tiles = move.split()
 
-            if move_from_coord is None or move_to_coord is None:
-                print("Invalid Tile.")
+            if len(tiles) < 2:
+                print("Invalid input.")
                 continue
+
+            coords = []
+
+            invalid = False
+
+            for tile in tiles:
+
+                coord = renderer.get_coord(tile)
+
+                if coord is None:
+                    print(f"Invalid tile: {tile}")
+                    invalid = True
+                    break
+
+                coords.append(coord)
+            
+            if invalid:
+                continue
+
 
             send_json(client, {
                 "type": "move",
-                "from": move_from_coord,
-                "to": move_to_coord
+                "path": coords
             })
 
             # Prevent multiple moves

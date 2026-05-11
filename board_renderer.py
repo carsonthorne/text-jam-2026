@@ -87,7 +87,7 @@ class BoardRenderer:
                     symbol = "○"
 
                 elif occupant == 1:
-                    symbol = "●"    #blue
+                    symbol = "●"
 
                 elif occupant == 2:
                     symbol = "\033[91m●\033[0m"    #red

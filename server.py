@@ -69,13 +69,11 @@ def handle_client(conn, player_id):
 
                             continue
 
-                        move_from = tuple(data["from"])
-                        move_to = tuple(data["to"])
+                        path = [tuple(coord) for coord in data["path"]]
 
                         valid, reason = game_state.is_valid_move(
                             player_id,
-                            move_from,
-                            move_to
+                            path
                         )
 
                         if not valid:
@@ -87,7 +85,7 @@ def handle_client(conn, player_id):
 
                             continue
 
-                        game_state.apply_move(move_from, move_to)
+                        game_state.apply_move(path[0], path[-1])
 
                     broadcast_game_state()
 
