@@ -21,7 +21,7 @@ def broadcast_game_state():
 
         state_message = {
             "type": "game_state",
-            "board": game_state.get_board_state(),
+            "board": game_state.serialize_board(),
             "current_player": game_state.current_player + 1
         }
 
@@ -69,8 +69,8 @@ def handle_client(conn, player_id):
 
                             continue
 
-                        move_from = data["from"]
-                        move_to = data["to"]
+                        move_from = tuple(data["from"])
+                        move_to = tuple(data["to"])
 
                         valid, reason = game_state.is_valid_move(
                             player_id,

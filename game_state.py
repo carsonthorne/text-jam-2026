@@ -1,5 +1,14 @@
 class GameState:
 
+    HEX_DIRECTIONS = [
+        (1, 0),
+        (1, -1),
+        (0, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, 1)
+    ]
+
     def __init__(self):
 
         self.board = {}
@@ -10,44 +19,49 @@ class GameState:
 
     def initialize_board(self):
 
-        # TEMPORARY SIMPLE SETUP
-        self.board = {
+        for r in range(7):
 
-            "A1": 1,
+            for q in range(-r, 1):
 
-            "B1": 1,
-            "B2": None,
+                self.board[(q, r)] = None
 
-            "C1": None,
-            "C2": None,
-            "C3": None,
+        #TEMP pieces
+        self.board[(0, 0)] = 1
 
-            "D1": None,
-            "D2": None,
-            "D3": None,
-            "D4": None,
+        self.board[(0, 1)] = 1
 
-            "E1": None,
-            "E2": None,
-            "E3": None,
-            "E4": None,
-            "E5": None,
+        self.board[(0, 5)] = 2
+        self.board[(-1, 5)] = 2
 
-            "F1": None,
-            "F2": None,
-            "F3": None,
-            "F4": None,
-            "F5": None,
-            "F6": 2,
+    def add_coords(self, a, b):
+        return (a[0] + b[0], a[1] + b[1])
+    
+    def is_adjacent_move(self, move_from, move_to):
 
-            "G1": None,
-            "G2": None,
-            "G3": None,
-            "G4": None,
-            "G5": None,
-            "G6": 2,
-            "G7": None
-        }
+        for direction in self.HEX_DIRECTIONS:
+
+            neighbor = self.add_coords(move_from, direction)
+
+            if neighbor == move_to:
+                return True
+        
+        return False
+    
+    def is_jump_move(self, move_from, move_to):
+
+        for direction in self.HEX_DIRECTIONS:
+
+            middle = self.add_coords(move_from, direction)
+
+            landing = self.add_coords(middle, direction)
+
+            if landing == move_to:
+
+                if middle in self.board and self.board[middle] is not None:
+
+                    return True
+        
+        return False
 
     def is_valid_move(self, player_id, move_from, move_to):
 
@@ -71,12 +85,14 @@ class GameState:
         if self.board[move_to] is not None:
             return False, "Destination occupied."
 
-        # TODO:
-        # Add actual Chinese Checkers rules later ( adjacency/jump rules )
-
-        return True, ""
-    
-
+        if self.is_adjacent_move(move_from, move_to):
+            return True, ""
+        
+        if self.is_jump_move(move_from, move_to):
+            return True, ""
+        
+        return False, "Illegal move."
+            
     def apply_move(self, move_from, move_to):
 
         self.board[move_to] = self.board[move_from]
@@ -85,6 +101,13 @@ class GameState:
 
         self.current_player = 1 - self.current_player
 
-    def get_board_state(self):
+    def serialize_board(self):
 
-        return self.board.copy()
+        serialized = {}
+
+        for coord, value in self.board.items():
+
+            key = f"{coord[0]},{coord[1]}"
+            serialized[key] = value
+
+        return serialized

@@ -53,7 +53,15 @@ def receive_messages(client):
 
                     global board
 
-                    board = data["board"]
+                    serialized_board = data["board"]
+
+                    board = {}
+
+                    for key, value in serialized_board.items():
+
+                        q, r = map(int, key.split(","))
+
+                        board[(q, r)] = value
 
                     print("\nUpdated Board:")
                     renderer.render(board)
@@ -86,10 +94,17 @@ def input_loop(client):
         try:
             move_from, move_to = move.split()
 
+            move_from_coord = renderer.get_coord(move_from)
+            move_to_coord = renderer.get_coord(move_to)
+
+            if move_from_coord is None or move_to_coord is None:
+                print("Invalid Tile.")
+                continue
+
             send_json(client, {
                 "type": "move",
-                "from": move_from,
-                "to": move_to
+                "from": move_from_coord,
+                "to": move_to_coord
             })
 
             # Prevent multiple moves
