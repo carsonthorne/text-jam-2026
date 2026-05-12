@@ -1,3 +1,5 @@
+from board_renderer import BoardRenderer
+
 class GameState:
 
     HEX_DIRECTIONS = [
@@ -15,23 +17,27 @@ class GameState:
 
         self.current_player = 0
 
+        self.renderer = BoardRenderer()
+
         self.initialize_board()
 
     def initialize_board(self):
 
-        for r in range(7):
-
-            for q in range(-r, 1):
-
-                self.board[(q, r)] = None
+        for coord in self.renderer.get_all_coords():
+            self.board[coord] = None
 
         #TEMP pieces
-        self.board[(0, 0)] = 1
 
         self.board[(0, 1)] = 1
+        self.board[(0, 2)] = 1
 
-        self.board[(0, 5)] = 2
-        self.board[(-1, 5)] = 2
+        self.board[(0, 4)] = 2
+        self.board[(1, 5)] = 2
+        self.board[(1, 6)] = 2
+        self.board[(-1, 8)] = 2
+        self.board[(-3, 10)] = 2
+        self.board[(-5, 12)] = 2
+        self.board[(-7, 14)] = 2
 
     def add_coords(self, a, b):
         return (a[0] + b[0], a[1] + b[1])
