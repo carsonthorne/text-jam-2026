@@ -1,4 +1,7 @@
-from board_renderer import BoardRenderer
+from board_definition import (
+    VALID_COORDS,
+    HEX_DIRECTIONS
+)
 
 class GameState:
 
@@ -17,13 +20,12 @@ class GameState:
 
         self.current_player = 0
 
-        self.renderer = BoardRenderer()
 
         self.initialize_board()
 
     def initialize_board(self):
 
-        for coord in self.renderer.get_all_coords():
+        for coord in VALID_COORDS:
             self.board[coord] = None
 
         #TEMP pieces

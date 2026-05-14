@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 from board_renderer import BoardRenderer
+from board_definition import get_coord
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -105,7 +106,7 @@ def input_loop(client):
 
             for tile in tiles:
 
-                coord = renderer.get_coord(tile)
+                coord = get_coord(tile)
 
                 if coord is None:
                     print(f"Invalid tile: {tile}")
@@ -126,8 +127,8 @@ def input_loop(client):
             # Prevent multiple moves
             turn_event.clear()
 
-        except:
-            print("Invalid input format.")
+        except Exception as e:
+            print("Invalid input format.", e)
 
 
 def start_client():
