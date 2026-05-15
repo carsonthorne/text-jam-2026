@@ -174,6 +174,21 @@ SPACING = {
     "Q": 18
 }
 
+HOME_POSITIONS = {
+    "N": ["A1", "B1", "B2", "C1", "C2", "C3", "D1", "D2", "D3", "D4"],
+    "NE": ["E10", "E11", "E12", "E13", "F10", "F11", "F12", "G10", "G11", "H10"],
+    "SE": ["J10", "K10", "K11", "L10", "L11", "L12", "M10", "M11", "M12", "M13"],
+    "S": ["N1", "N2", "N3", "N4", "O1", "O2", "O3", "P1", "P2", "Q1"],
+    "SW": ["J1", "K1", "K2", "L1", "L2", "L3", "M1", "M2", "M3", "M4"],
+    "NW": ["E1", "E2", "E3", "E4", "F1", "F2", "F3", "G1", "G2", "H1"]
+}
+
+LABEL_TO_HOME_COLOR = {}
+
+for color, labels in HOME_POSITIONS.items():
+    for label in labels:
+        LABEL_TO_HOME_COLOR[label] = color
+
 LABEL_TO_COORD = {}
 COORD_TO_LABEL = {}
 

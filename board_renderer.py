@@ -1,4 +1,4 @@
-from board_definition import ROWS, SPACING
+from board_definition import ROWS, SPACING, HOME_POSITIONS, LABEL_TO_HOME_COLOR
 
 class BoardRenderer:
 
@@ -7,6 +7,15 @@ class BoardRenderer:
         BLUE = "\033[94m"
         RED = "\033[91m"
         RESET = "\033[0m"
+
+        HOME_COLORS = {
+            "N":  "\033[41m",  # red background
+            "NE": "\033[40m",  # black background
+            "SE": "\033[44m",  # blue background
+            "S":  "\033[42m",  # green background
+            "SW": "\033[47m",  # white background
+            "NW": "\033[43m",  # yellow background
+        }
 
         print ()
 
@@ -18,17 +27,20 @@ class BoardRenderer:
 
                 occupant = board.get(coord)
 
+                home_zone = LABEL_TO_HOME_COLOR.get(label)
+                bg = HOME_COLORS.get(home_zone, "")
+
                 if occupant == None:
-                    text = label
+                    text = f"{bg}{label}{RESET}"
 
                 elif occupant == 1:
-                    text = f"{BLUE}{label}{RESET}"
+                    text = f"{bg}{BLUE}{label}{RESET}"
 
                 elif occupant == 2:
-                    text = f"{RED}{label}{RESET}"
+                    text = f"{bg}{RED}{label}{RESET}"
 
                 else:
-                    text = "??"
+                    text = f"{bg}??{RESET}"
 
                 print(f"{text} ", end="")
 
