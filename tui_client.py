@@ -152,13 +152,16 @@ class ChineseCheckersApp(App):
 
     def refresh_board(self):
 
-        board_str = self.renderer.build_board_string(
+        if not self.board:
+            return
+
+        board_text = self.renderer.build_board_text(
             self.board,
             self.cursor,
             self.selected_path
         )
 
-        self.board_widget.update(board_str)
+        self.board_widget.update(board_text)
 
     def on_key(self, event: Key):
 

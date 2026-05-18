@@ -184,13 +184,13 @@ HOME_POSITIONS = {
 }
 
 HOME_COLORS = {
-            "N":  "\033[41m",
-            "NE": "\033[40m",
-            "SE": "\033[44m",
-            "S":  "\033[42m",
-            "SW": "\033[47m",
-            "NW": "\033[43m",
-        }
+    "N": "red",
+    "NE": "grey15",
+    "SE": "blue",
+    "S": "green",
+    "SW": "white",
+    "NW": "yellow",
+}
 
 LABEL_TO_HOME_COLOR = {}
 

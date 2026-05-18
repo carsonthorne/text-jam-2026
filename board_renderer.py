@@ -1,3 +1,6 @@
+from rich.text import Text
+from rich.style import Style
+
 from board_definition import (
     ROWS,
     SPACING,
@@ -8,7 +11,7 @@ from board_definition import (
 
 class BoardRenderer:
 
-    def build_board_string(
+    def build_board_text(
         self,
         board,
         cursor=None,
@@ -18,47 +21,58 @@ class BoardRenderer:
         if selected_path is None:
             selected_path = []
 
-        BLUE = "\033[94m"
-        RED = "\033[91m"
-        RESET = "\033[0m"
-
-        CURSOR = "\033[7m"
-
         lines = []
+
+        BLUE_STYLE = Style(color="blue", bold=True)
+        RED_STYLE = Style(color="red", bold=True)
+        EMPTY_STYLE = Style(color="white")
+
+        CURSOR_STYLE = Style(reverse=True)
+        SELECTED_STYLE = Style(bgcolor="magenta")
 
         for row, tiles in ROWS.items():
 
-            line = " " * SPACING[row]
+            line = Text(" " * SPACING[row])
 
             for label, coord in tiles:
 
                 occupant = board.get(coord)
 
                 home_zone = LABEL_TO_HOME_COLOR.get(label)
-                bg = HOME_COLORS.get(home_zone, "")
+                bg_color = HOME_COLORS.get(home_zone)
 
-                style = bg
+                cell_style = Style(bgcolor=bg_color) if bg_color else Style()
 
+                # Cursor highlight
                 if coord == cursor:
-                    style += CURSOR
+                    cell_style += CURSOR_STYLE
 
+                # Selected path highlight
                 if coord in selected_path:
-                    style += "\033[95m"
+                    cell_style += SELECTED_STYLE
+                    # cell_style += Style(underline=True)
 
                 if occupant is None:
-                    text = f"{style}○{RESET}"
+                    cell = Text("○", style=cell_style + EMPTY_STYLE)
 
                 elif occupant == 1:
-                    text = f"{style}{BLUE}●{RESET}"
+                    cell = Text("●", style=cell_style + BLUE_STYLE)
 
                 elif occupant == 2:
-                    text = f"{style}{RED}●{RESET}"
+                    cell = Text("●", style=cell_style + RED_STYLE)
 
                 else:
-                    text = f"{style}??{RESET}"
+                    cell = Text("??", style=cell_style)
 
-                line += f"{text} "
+                line.append(cell)
+                line.append(" ")
 
             lines.append(line)
 
-        return "\n".join(lines)
+        output = Text()
+        for i, line in enumerate(lines):
+            output.append(line)
+            if i != len(lines) - 1:
+                output.append("\n")
+
+        return output
