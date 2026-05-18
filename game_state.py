@@ -5,15 +5,6 @@ from board_definition import (
 
 class GameState:
 
-    HEX_DIRECTIONS = [
-        (1, 0),
-        (1, -1),
-        (0, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, 1)
-    ]
-
     def __init__(self):
 
         self.board = {}
@@ -46,7 +37,7 @@ class GameState:
     
     def is_adjacent_move(self, move_from, move_to):
 
-        for direction in self.HEX_DIRECTIONS:
+        for direction in HEX_DIRECTIONS:
 
             neighbor = self.add_coords(move_from, direction)
 
@@ -57,7 +48,7 @@ class GameState:
     
     def is_jump_move(self, move_from, move_to):
 
-        for direction in self.HEX_DIRECTIONS:
+        for direction in HEX_DIRECTIONS:
 
             middle = self.add_coords(move_from, direction)
 

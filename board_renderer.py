@@ -1,27 +1,34 @@
-from board_definition import ROWS, SPACING, HOME_POSITIONS, LABEL_TO_HOME_COLOR
+from board_definition import (
+    ROWS,
+    SPACING,
+    HOME_POSITIONS,
+    LABEL_TO_HOME_COLOR,
+    COORD_TO_LABEL,
+    HOME_COLORS)
 
 class BoardRenderer:
 
-    def render(self, board):
+    def build_board_string(
+        self,
+        board,
+        cursor=None,
+        selected_path=None
+    ):
+
+        if selected_path is None:
+            selected_path = []
 
         BLUE = "\033[94m"
         RED = "\033[91m"
         RESET = "\033[0m"
 
-        HOME_COLORS = {
-            "N":  "\033[41m",  # red background
-            "NE": "\033[40m",  # black background
-            "SE": "\033[44m",  # blue background
-            "S":  "\033[42m",  # green background
-            "SW": "\033[47m",  # white background
-            "NW": "\033[43m",  # yellow background
-        }
+        CURSOR = "\033[7m"
 
-        print ()
+        lines = []
 
         for row, tiles in ROWS.items():
 
-            print(" " * SPACING[row], end="")
+            line = " " * SPACING[row]
 
             for label, coord in tiles:
 
@@ -30,20 +37,28 @@ class BoardRenderer:
                 home_zone = LABEL_TO_HOME_COLOR.get(label)
                 bg = HOME_COLORS.get(home_zone, "")
 
-                if occupant == None:
-                    text = f"{bg}{label}{RESET}"
+                style = bg
+
+                if coord == cursor:
+                    style += CURSOR
+
+                if coord in selected_path:
+                    style += "\033[95m"
+
+                if occupant is None:
+                    text = f"{style}○{RESET}"
 
                 elif occupant == 1:
-                    text = f"{bg}{BLUE}{label}{RESET}"
+                    text = f"{style}{BLUE}●{RESET}"
 
                 elif occupant == 2:
-                    text = f"{bg}{RED}{label}{RESET}"
+                    text = f"{style}{RED}●{RESET}"
 
                 else:
-                    text = f"{bg}??{RESET}"
+                    text = f"{style}??{RESET}"
 
-                print(f"{text} ", end="")
+                line += f"{text} "
 
-            print()
+            lines.append(line)
 
-        print()
+        return "\n".join(lines)
