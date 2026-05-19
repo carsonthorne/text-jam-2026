@@ -192,7 +192,8 @@ HOME_COLORS = {
     "N":  "red1",
     "NE": "grey23",
     "SE": "purple4",
-    "S":  "spring_green3",
+    # "S":  "spring_green3",
+    "S":  "green3",
     "SW": "grey50",
     "NW": "dark_orange",
 }

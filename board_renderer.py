@@ -23,11 +23,14 @@ class BoardRenderer:
 
         lines = []
 
-        GREEN_STYLE = Style(color="spring_green3", bold=True)
+        # GREEN_STYLE = Style(color="spring_green3", bold=True)
+        GREEN_STYLE = Style(color="green3", bold=True)
         RED_STYLE = Style(color="red1", bold=True)
         EMPTY_STYLE = Style(color="white")
+        HOME_EMPTY_STYLE = Style(color="black")
 
-        CURSOR_STYLE = Style(bgcolor="grey50", bold=True)
+        CURSOR_STYLE = Style(bgcolor="grey50", bold=True, underline=True)
+        CURSOR_EMPTY_STYLE = Style(color="black")
         SELECTED_STYLE = Style(bgcolor="grey50")
 
         for row, tiles in ROWS.items():
@@ -41,7 +44,7 @@ class BoardRenderer:
                 home_zone = LABEL_TO_HOME_COLOR.get(label)
                 bg_color = HOME_COLORS.get(home_zone)
 
-                cell_style = Style(bgcolor=bg_color) if bg_color else Style()
+                cell_style = Style(bgcolor=bg_color) if bg_color else Style(bgcolor="white")
 
                 # Cursor highlight
                 if coord == cursor:
@@ -52,7 +55,23 @@ class BoardRenderer:
                     cell_style += SELECTED_STYLE
 
                 if occupant is None:
-                    cell = Text("○", style=cell_style + EMPTY_STYLE)
+                    
+                    # Empty home-zone tiles
+                    if home_zone is not None:
+                        empty_style = HOME_EMPTY_STYLE
+                        # symbol = "●"
+                        symbol = "○"
+
+                    # Empty normal tiles
+                    else:
+                        empty_style = HOME_EMPTY_STYLE
+                        symbol = "○"
+                        # symbol = "●"
+
+                    if coord == cursor:
+                        empty_style = CURSOR_EMPTY_STYLE
+
+                    cell = Text(symbol, style=cell_style + empty_style)
 
                 elif occupant == 1:
                     cell = Text("●", style=cell_style + GREEN_STYLE)
