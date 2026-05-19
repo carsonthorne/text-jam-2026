@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Static
+from textual.widgets import Static, RichLog
+from textual.containers import Horizontal
 from textual.events import Key
 import socket
 import threading
@@ -51,7 +52,19 @@ class ChineseCheckersApp(App):
 
         self.board_widget = Static()
 
-        yield self.board_widget
+        self.message_log = RichLog(
+            highlight=True,
+            markup=True,
+            wrap=True
+        )
+
+        self.board_widget.styles.width = "50%"
+        self.message_log.styles.width = "50%"
+
+        yield Horizontal(
+            self.board_widget,
+            self.message_log
+        )
 
     def on_mount(self):
 
@@ -93,6 +106,11 @@ class ChineseCheckersApp(App):
                     if msg_type == "welcome":
 
                         self.player_id = data["player_id"]
+
+                        self.call_from_thread(
+                            self.log_message,
+                            f"[bold green]You are player {self.player_id}[/]"
+                        )
 
                     elif msg_type == "game_state":
 
@@ -140,15 +158,25 @@ class ChineseCheckersApp(App):
 
             self.cursor = next(iter(self.board))
 
+        was_my_turn = self.my_turn
+
         self.my_turn = (
             current_player == self.player_id
         )
+
+        if self.my_turn and not was_my_turn:
+        
+            self.log_message("[bold yellow]Your turn![/]")
+
+        elif not self.my_turn and was_my_turn:
+
+            self.log_message("[cyan]Waiting for opponent...[/]")
 
         self.refresh_board()
 
     def show_error(self, message):
 
-        print("ERROR:", message)
+        f"[bold red]ERROR:[/] {message}"
 
     def refresh_board(self):
 
@@ -189,6 +217,10 @@ class ChineseCheckersApp(App):
 
             self.selected_path.append(self.cursor)
 
+            self.log_message(
+                f"[magenta]Selected:[/] {self.cursor}"
+            )
+
             self.refresh_board()
 
         elif key == "enter":
@@ -203,11 +235,17 @@ class ChineseCheckersApp(App):
 
     def send_move(self):
 
+        self.log_message(
+            f"Sent move: {self.selected_path}"
+        )
+
         send_json(self.client, {
             "type": "move",
             "path": self.selected_path
         })
 
+    def log_message(self, message):
+        self.message_log.write(message)
 
 if __name__ == "__main__":
     app = ChineseCheckersApp()
