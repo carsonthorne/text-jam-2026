@@ -141,7 +141,6 @@ class ChineseCheckersApp(App):
                     elif msg_type == "error":
 
                         message = data["message"]
-
                         self.call_from_thread(
                             self.show_error,
                             message
@@ -207,7 +206,8 @@ class ChineseCheckersApp(App):
 
     def show_error(self, message):
 
-        f"[bold red]ERROR:[/] {message}"
+        self.log_message(f"[bold red]ERROR:[/] {message}")
+        
 
     def refresh_board(self):
 
