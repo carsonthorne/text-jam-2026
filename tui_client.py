@@ -248,10 +248,6 @@ class ChineseCheckersApp(App):
 
             self.selected_path.append(self.cursor)
 
-            self.log_message(
-                f"[magenta]Selected:[/] {self.cursor}"
-            )
-
             self.refresh_board()
 
         elif key == "enter":
@@ -265,10 +261,6 @@ class ChineseCheckersApp(App):
                 self.refresh_board()
 
     def send_move(self):
-
-        self.log_message(
-            f"Sent move: {self.selected_path}"
-        )
 
         send_json(self.client, {
             "type": "move",
