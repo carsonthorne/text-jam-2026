@@ -206,7 +206,7 @@ class ChineseCheckersApp(App):
 
     def show_error(self, message):
 
-        self.log_message(f"[bold red]ERROR:[/] {message}")
+        self.log_message(f"[bold red]Invalid move:[/] {message}")
         
 
     def refresh_board(self):

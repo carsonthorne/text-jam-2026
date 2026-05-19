@@ -3,7 +3,10 @@ from board_definition import (
     HEX_DIRECTIONS,
     HOME_POSITIONS,
     LABEL_TO_COORD,
-    WIN_ZONE_COORDS
+    WIN_ZONE_COORDS,
+    ZONE_COORDS,
+    WIN_ZONES,
+    PLAYER_START_ZONES
 )
 
 class GameState:
@@ -54,7 +57,15 @@ class GameState:
         }
 
         return player_positions == target_zone
+    
+    def get_zone_for_coord(self, coord):
+        for zone_name, coords in ZONE_COORDS.items():
 
+            if coord in coords:
+                return zone_name
+            
+        return None
+    
     def add_coords(self, a, b):
         return (a[0] + b[0], a[1] + b[1])
     
@@ -93,10 +104,32 @@ class GameState:
         move_from = path[0]
         move_to = path[-1]
 
+        from_zone = self.get_zone_for_coord(move_from)
+        to_zone = self.get_zone_for_coord(move_to)
+
+        player_number = player_id + 1
+
+        start_zone = PLAYER_START_ZONES[player_number]
+        target_zone = WIN_ZONES[player_number]
+
+        # Prevent returning to home triangle
+        if from_zone is None and to_zone == start_zone:
+            return False, "Cannot return to your starting triangle."
+
+        # Prevent landing in non-target triangles
+        if to_zone is not None:
+            
+            if to_zone != start_zone and to_zone != target_zone:
+                return False, "Cannot enter opponent home triangle."
+
+        # Once inside target triangle,
+        # the piece cannot leave it
+        if to_zone is None and from_zone == target_zone:
+            return False, "Piece cannot leave goal zone."
+
         # Is source tile valid?
         if move_from not in self.board:
             return False, "Invalid source tile."
-
         
         # Is there actually a piece there?
         if self.board[move_from] is None:
@@ -129,7 +162,8 @@ class GameState:
         # Jump chain
         #-----------
 
-        visited = set()
+        # visited = set()
+        visited = {move_from}
 
         for i in range(len(path) - 1):
 
@@ -140,7 +174,8 @@ class GameState:
             if nxt in visited:
                 return False, "Cannot revisit tiles."
             
-            visited.add(current)
+            # visited.add(current)
+            visited.add(nxt)
 
             # Destination must exist
             if nxt not in self.board:

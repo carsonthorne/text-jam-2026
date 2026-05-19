@@ -183,11 +183,6 @@ HOME_POSITIONS = {
     "NW": ["E1", "E2", "E3", "E4", "F1", "F2", "F3", "G1", "G2", "H1"]
 }
 
-WIN_ZONES = {
-    1: "S",     # Player 1 must reach South
-    2: "N"      # Player 2 must reach North
-}
-
 HOME_COLORS = {
     "N":  "red1",
     "NE": "grey23",
@@ -195,6 +190,16 @@ HOME_COLORS = {
     "S":  "spring_green3",
     "SW": "grey50",
     "NW": "dark_orange",
+}
+
+WIN_ZONES = {
+    1: "S",     # Player 1 must reach South
+    2: "N"      # Player 2 must reach North
+}
+
+PLAYER_START_ZONES = {
+    1: "N",
+    2: "S"
 }
 
 LABEL_TO_HOME_COLOR = {}
@@ -220,6 +225,15 @@ for player, zone in WIN_ZONES.items():
     WIN_ZONE_COORDS[player] = {
         LABEL_TO_COORD[label]
         for label in HOME_POSITIONS[zone]
+    }
+
+ZONE_COORDS = {}
+
+for zone_name, labels in HOME_POSITIONS.items():
+
+    ZONE_COORDS[zone_name] = {
+        LABEL_TO_COORD[label]
+        for label in labels
     }
 
 VALID_COORDS = set(COORD_TO_LABEL.keys())
