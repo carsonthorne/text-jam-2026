@@ -189,12 +189,12 @@ WIN_ZONES = {
 }
 
 HOME_COLORS = {
-    "N": "red",
-    "NE": "grey15",
-    "SE": "blue",
-    "S": "green",
-    "SW": "white",
-    "NW": "yellow",
+    "N":  "red1",
+    "NE": "grey23",
+    "SE": "purple4",
+    "S":  "spring_green3",
+    "SW": "grey50",
+    "NW": "dark_orange",
 }
 
 LABEL_TO_HOME_COLOR = {}

@@ -23,12 +23,12 @@ class BoardRenderer:
 
         lines = []
 
-        BLUE_STYLE = Style(color="blue", bold=True)
-        RED_STYLE = Style(color="red", bold=True)
+        GREEN_STYLE = Style(color="spring_green3", bold=True)
+        RED_STYLE = Style(color="red1", bold=True)
         EMPTY_STYLE = Style(color="white")
 
-        CURSOR_STYLE = Style(reverse=True)
-        SELECTED_STYLE = Style(bgcolor="magenta")
+        CURSOR_STYLE = Style(bgcolor="grey50", bold=True)
+        SELECTED_STYLE = Style(bgcolor="grey50")
 
         for row, tiles in ROWS.items():
 
@@ -50,13 +50,12 @@ class BoardRenderer:
                 # Selected path highlight
                 if coord in selected_path:
                     cell_style += SELECTED_STYLE
-                    # cell_style += Style(underline=True)
 
                 if occupant is None:
                     cell = Text("○", style=cell_style + EMPTY_STYLE)
 
                 elif occupant == 1:
-                    cell = Text("●", style=cell_style + BLUE_STYLE)
+                    cell = Text("●", style=cell_style + GREEN_STYLE)
 
                 elif occupant == 2:
                     cell = Text("●", style=cell_style + RED_STYLE)
