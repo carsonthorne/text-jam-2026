@@ -2,7 +2,8 @@ from board_definition import (
     VALID_COORDS,
     HEX_DIRECTIONS,
     HOME_POSITIONS,
-    LABEL_TO_COORD
+    LABEL_TO_COORD,
+    WIN_ZONE_COORDS
 )
 
 class GameState:
@@ -13,6 +14,7 @@ class GameState:
 
         self.current_player = 0
 
+        self.winner = None
 
         self.initialize_board()
 
@@ -40,6 +42,18 @@ class GameState:
             coord = LABEL_TO_COORD[label]
 
             self.board[coord] = 2
+
+    def check_winner(self, player_number):
+
+        target_zone = WIN_ZONE_COORDS[player_number]
+
+        player_positions = {
+            coord
+            for coord, piece in self.board.items()
+            if piece == player_number
+        }
+
+        return player_positions == target_zone
 
     def add_coords(self, a, b):
         return (a[0] + b[0], a[1] + b[1])
@@ -144,10 +158,20 @@ class GameState:
             
     def apply_move(self, move_from, move_to):
 
-        self.board[move_to] = self.board[move_from]
+        player_number = self.board[move_from]
+
+        self.board[move_to] = player_number
 
         self.board[move_from] = None
 
+        # Check for victory
+        if self.check_winner(player_number):
+            
+            self.winner = player_number
+
+            return
+        
+        # Next turn
         self.current_player = 1 - self.current_player
 
     def serialize_board(self):

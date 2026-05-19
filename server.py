@@ -22,7 +22,8 @@ def broadcast_game_state():
         state_message = {
             "type": "game_state",
             "board": game_state.serialize_board(),
-            "current_player": game_state.current_player + 1
+            "current_player": game_state.current_player + 1,
+            "winner": game_state.winner
         }
 
     for client in clients:

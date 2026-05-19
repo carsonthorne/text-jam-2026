@@ -126,13 +126,16 @@ class ChineseCheckersApp(App):
 
                         current_player = data["current_player"]
 
+                        winner = data.get("winner")
+
                         # VERY IMPORTANT:
                         # update UI safely
 
                         self.call_from_thread(
                             self.update_game_state,
                             new_board,
-                            current_player
+                            current_player,
+                            winner
                         )
 
                     elif msg_type == "error":
@@ -150,13 +153,41 @@ class ChineseCheckersApp(App):
 
                 break
 
-    def update_game_state(self, new_board, current_player):
+    def update_game_state(self, new_board, current_player, winner):
 
         self.board = new_board
 
         if self.cursor not in self.board:
 
             self.cursor = next(iter(self.board))
+
+        #-----------------
+        # Handle game over
+        #-----------------
+
+        if winner is not None:
+
+            self.my_turn = False
+
+            if winner == self.player_id:
+
+                self.log_message(
+                    "[bold green]You win![/]"
+                )
+
+            else:
+
+                self.log_message(
+                    f"[bold red]Player {winner} wins.[/]"
+                )
+
+            self.refresh_board()
+
+            return
+        
+        #------------
+        # Normal turn
+        #------------
 
         was_my_turn = self.my_turn
 
