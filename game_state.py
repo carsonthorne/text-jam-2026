@@ -1,6 +1,8 @@
 from board_definition import (
     VALID_COORDS,
-    HEX_DIRECTIONS
+    HEX_DIRECTIONS,
+    HOME_POSITIONS,
+    LABEL_TO_COORD
 )
 
 class GameState:
@@ -19,18 +21,25 @@ class GameState:
         for coord in VALID_COORDS:
             self.board[coord] = None
 
-        #TEMP pieces
+        #-----------------
+        # Player 1 (North)
+        #-----------------
 
-        self.board[(0, 1)] = 1
-        self.board[(0, 2)] = 1
+        for label in HOME_POSITIONS["N"]:
 
-        self.board[(0, 4)] = 2
-        self.board[(1, 5)] = 2
-        self.board[(1, 6)] = 2
-        self.board[(-1, 8)] = 2
-        self.board[(-3, 10)] = 2
-        self.board[(-5, 12)] = 2
-        self.board[(-7, 14)] = 2
+            coord = LABEL_TO_COORD[label]
+
+            self.board[coord] = 1
+
+        #-----------------
+        # Player 2 (South)
+        #-----------------
+
+        for label in HOME_POSITIONS["S"]:
+
+            coord = LABEL_TO_COORD[label]
+
+            self.board[coord] = 2
 
     def add_coords(self, a, b):
         return (a[0] + b[0], a[1] + b[1])
