@@ -1,21 +1,22 @@
 from board_definition import (
     VALID_COORDS,
     HEX_DIRECTIONS,
-    HOME_POSITIONS,
-    LABEL_TO_COORD,
-    WIN_ZONE_COORDS,
-    ZONE_COORDS,
-    WIN_ZONES,
-    PLAYER_START_ZONES
+    HOME_ZONES,
+    PLAYER_CONFIGS
 )
 
 class GameState:
 
-    def __init__(self):
+    def __init__(self, num_players=2):
+
+        self.num_players = num_players
+        self.players = PLAYER_CONFIGS[num_players]
 
         self.board = {}
-
-        self.current_player = 0
+        self.current_player_index = 0
+        self.current_player_number = (
+            self.players[self.current_player_index]["player"]
+        )
 
         self.winner = None
 
@@ -26,29 +27,24 @@ class GameState:
         for coord in VALID_COORDS:
             self.board[coord] = None
 
-        #-----------------
-        # Player 1 (North)
-        #-----------------
+        for config in self.players:
 
-        for label in HOME_POSITIONS["N"]:
+            player_number = config["player"]
+            start_zone = config["start"]
 
-            coord = LABEL_TO_COORD[label]
-
-            self.board[coord] = 1
-
-        #-----------------
-        # Player 2 (South)
-        #-----------------
-
-        for label in HOME_POSITIONS["S"]:
-
-            coord = LABEL_TO_COORD[label]
-
-            self.board[coord] = 2
+            for coord in HOME_ZONES[start_zone]:
+                self.board[coord] = player_number
 
     def check_winner(self, player_number):
 
-        target_zone = WIN_ZONE_COORDS[player_number]
+        player_config = next(
+            p for p in self.players
+            if p["player"] == player_number
+        )
+
+        target_zone_name = player_config["goal"]
+
+        target_zone = HOME_ZONES[target_zone_name]
 
         player_positions = {
             coord
@@ -59,7 +55,7 @@ class GameState:
         return player_positions == target_zone
     
     def get_zone_for_coord(self, coord):
-        for zone_name, coords in ZONE_COORDS.items():
+        for zone_name, coords in HOME_ZONES.items():
 
             if coord in coords:
                 return zone_name
@@ -109,8 +105,13 @@ class GameState:
 
         player_number = player_id + 1
 
-        start_zone = PLAYER_START_ZONES[player_number]
-        target_zone = WIN_ZONES[player_number]
+        player_config = next(
+            p for p in self.players
+            if p["player"] == player_number
+        )
+
+        start_zone = player_config["start"]
+        target_zone = player_config["goal"]
 
         # Prevent returning to home triangle
         if from_zone is None and to_zone == start_zone:
@@ -162,7 +163,6 @@ class GameState:
         # Jump chain
         #-----------
 
-        # visited = set()
         visited = {move_from}
 
         for i in range(len(path) - 1):
@@ -174,7 +174,6 @@ class GameState:
             if nxt in visited:
                 return False, "Cannot revisit tiles."
             
-            # visited.add(current)
             visited.add(nxt)
 
             # Destination must exist
@@ -207,7 +206,13 @@ class GameState:
             return
         
         # Next turn
-        self.current_player = 1 - self.current_player
+        self.current_player_index = (
+            self.current_player_index + 1
+        ) % self.num_players
+
+        self.current_player_number = (
+            self.players[self.current_player_index]["player"]
+        )
 
     def serialize_board(self):
 

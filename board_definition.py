@@ -174,13 +174,13 @@ SPACING = {
     "Q": 12
 }
 
-HOME_POSITIONS = {
-    "N": ["A1", "B1", "B2", "C1", "C2", "C3", "D1", "D2", "D3", "D4"],
-    "NE": ["E10", "E11", "E12", "E13", "F10", "F11", "F12", "G10", "G11", "H10"],
-    "SE": ["J10", "K10", "K11", "L10", "L11", "L12", "M10", "M11", "M12", "M13"],
-    "S": ["N1", "N2", "N3", "N4", "O1", "O2", "O3", "P1", "P2", "Q1"],
-    "SW": ["J1", "K1", "K2", "L1", "L2", "L3", "M1", "M2", "M3", "M4"],
-    "NW": ["E1", "E2", "E3", "E4", "F1", "F2", "F3", "G1", "G2", "H1"]
+HOME_ZONES = {
+    "N": {(0,0), (-1,1), (0,1), (-2,2), (-1,2), (0,2), (-3,3), (-2,3), (-1,3), (0,3)},
+    "NE": {(1,4), (2,4), (3,4), (4,4), (1,5), (2,5), (3,5), (1,6), (2,6), (1,7)},
+    "SE": {(0,9), (-1,10), (0,10), (-2,11), (-1,11), (0,11), (-3,12), (-2,12), (-1,12), (0,12)},
+    "S": {(-8,13), (-7,13), (-6,13), (-5,13), (-8,14), (-7,14), (-6,14), (-8,15), (-7,15), (-8,16)},
+    "SW": {(-9,9), (-10,10), (-9,10), (-11,11), (-10,11), (-9,11), (-12,12), (-11,12), (-10,12), (-9,12)},
+    "NW": {(-8,4), (-7,4), (-6,4), (-5,4), (-8,5), (-7,5), (-6,5), (-8,6), (-7,6), (-8,7)},
 }
 
 HOME_COLORS = {
@@ -192,51 +192,45 @@ HOME_COLORS = {
     "NW": "dark_orange",
 }
 
-WIN_ZONES = {
-    1: "S",     # Player 1 must reach South
-    2: "N"      # Player 2 must reach North
+VALID_COORDS = {
+    coord
+    for tiles in ROWS.values()
+    for _, coord in tiles
 }
 
-PLAYER_START_ZONES = {
-    1: "N",
-    2: "S"
+COORD_TO_ZONE = {}
+
+for zone, coords in HOME_ZONES.items():
+
+    for coord in coords:
+        COORD_TO_ZONE[coord] = zone
+
+PLAYER_CONFIGS = {
+    2: [
+        {"player": 1, "start": "N", "goal": "S"},
+        {"player": 2, "start": "S", "goal": "N"}
+    ],
+    3: [
+        {"player": 1, "start": "N", "goal": "S"},
+        {"player": 2, "start": "SE", "goal": "NW"},
+        {"player": 3, "start": "SW", "goal": "NE"}
+    ],
+    4: [
+        {"player": 1, "start": "NW", "goal": "SE"},
+        {"player": 2, "start": "NE", "goal": "SW"},
+        {"player": 3, "start": "SE", "goal": "NW"},
+        {"player": 4, "start": "SW", "goal": "NE"}
+    ],
+    6: [
+        {"player": 1, "start": "N", "goal": "S"},
+        {"player": 2, "start": "NE", "goal": "SW"},
+        {"player": 3, "start": "SE", "goal": "NW"},
+        {"player": 4, "start": "S", "goal": "N"},
+        {"player": 5, "start": "SW", "goal": "NE"},
+        {"player": 6, "start": "NW", "goal": "SE"}
+    ]
 }
 
-LABEL_TO_HOME_COLOR = {}
-
-for color, labels in HOME_POSITIONS.items():
-    for label in labels:
-        LABEL_TO_HOME_COLOR[label] = color
-
-LABEL_TO_COORD = {}
-COORD_TO_LABEL = {}
-
-for row, tiles in ROWS.items():
-
-    for label, coord in tiles:
-
-        LABEL_TO_COORD[label] = coord
-        COORD_TO_LABEL[coord] = label
-
-WIN_ZONE_COORDS = {}
-
-for player, zone in WIN_ZONES.items():
-
-    WIN_ZONE_COORDS[player] = {
-        LABEL_TO_COORD[label]
-        for label in HOME_POSITIONS[zone]
-    }
-
-ZONE_COORDS = {}
-
-for zone_name, labels in HOME_POSITIONS.items():
-
-    ZONE_COORDS[zone_name] = {
-        LABEL_TO_COORD[label]
-        for label in labels
-    }
-
-VALID_COORDS = set(COORD_TO_LABEL.keys())
 
 HEX_DIRECTIONS = [
     (1, 0),
@@ -246,14 +240,3 @@ HEX_DIRECTIONS = [
     (-1, 1),
     (0, 1)
 ]
-
-def get_coord(label):
-    return LABEL_TO_COORD.get(label)
-
-
-def get_label(coord):
-    return COORD_TO_LABEL.get(coord)
-
-
-def get_all_coords():
-    return list(VALID_COORDS)

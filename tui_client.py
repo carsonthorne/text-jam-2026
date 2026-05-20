@@ -36,6 +36,8 @@ class ChineseCheckersApp(App):
 
         self.board = {}
 
+        self.player_configs = []
+
         self.cursor = (0, 0)
 
         self.selected_path = []
@@ -106,6 +108,7 @@ class ChineseCheckersApp(App):
                     if msg_type == "welcome":
 
                         self.player_id = data["player_id"]
+                        self.player_configs = data["players"]
 
                         self.call_from_thread(
                             self.log_message,
@@ -127,10 +130,8 @@ class ChineseCheckersApp(App):
                         current_player = data["current_player"]
 
                         winner = data.get("winner")
-
-                        # VERY IMPORTANT:
+                        
                         # update UI safely
-
                         self.call_from_thread(
                             self.update_game_state,
                             new_board,
@@ -216,6 +217,7 @@ class ChineseCheckersApp(App):
 
         board_text = self.renderer.build_board_text(
             self.board,
+            self.player_configs,
             self.cursor,
             self.selected_path
         )

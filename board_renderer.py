@@ -4,32 +4,43 @@ from rich.style import Style
 from board_definition import (
     ROWS,
     SPACING,
-    HOME_POSITIONS,
-    LABEL_TO_HOME_COLOR,
-    COORD_TO_LABEL,
-    HOME_COLORS)
+    COORD_TO_ZONE,
+    HOME_COLORS,
+)
 
 class BoardRenderer:
 
     def build_board_text(
         self,
         board,
+        player_configs,
         cursor=None,
         selected_path=None
     ):
 
-        if selected_path is None:
-            selected_path = []
+        PLAYER_STYLES = {}
 
-        lines = []
+        for config in player_configs:
 
-        GREEN_STYLE = Style(color="spring_green3", bold=True)
-        RED_STYLE = Style(color="red1", bold=True)
+            player_number = config["player"]
+
+            goal_zone = config["goal"]
+
+            PLAYER_STYLES[player_number] = Style(
+                color=HOME_COLORS[goal_zone],
+                bold=True
+            )
+        
         EMPTY_STYLE = Style(color="white")
         HOME_EMPTY_STYLE = Style(color="black")
 
         CURSOR_STYLE = Style(bgcolor="grey50", bold=True)
         SELECTED_STYLE = Style(bgcolor="grey50")
+        
+        if selected_path is None:
+            selected_path = []
+
+        lines = []
 
         for row, tiles in ROWS.items():
 
@@ -39,7 +50,7 @@ class BoardRenderer:
 
                 occupant = board.get(coord)
 
-                home_zone = LABEL_TO_HOME_COLOR.get(label)
+                home_zone = COORD_TO_ZONE.get(coord)
                 bg_color = HOME_COLORS.get(home_zone)
 
                 cell_style = Style(bgcolor=bg_color) if bg_color else Style()
@@ -60,15 +71,14 @@ class BoardRenderer:
 
                     cell = Text("○", style=cell_style + style)
 
-                elif occupant == 1:
-                    cell = Text("●", style=cell_style + GREEN_STYLE)
+                elif occupant is not None:
 
-                elif occupant == 2:
-                    cell = Text("●", style=cell_style + RED_STYLE)
+                    piece_style = PLAYER_STYLES.get(occupant)
 
-                else:
-                    cell = Text("??", style=cell_style)
-
+                    cell = Text(
+                        "●", style=cell_style + piece_style
+                    )
+                
                 line.append(cell)
                 line.append(" ")
 

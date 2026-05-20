@@ -6,8 +6,10 @@ from game_state import GameState
 HOST = "127.0.0.1"
 PORT = 5555
 
+num_players = 2
+
 clients = []
-game_state = GameState()
+game_state = None
 game_lock = threading.Lock()
 
 
@@ -22,8 +24,8 @@ def broadcast_game_state():
         state_message = {
             "type": "game_state",
             "board": game_state.serialize_board(),
-            "current_player": game_state.current_player + 1,
-            "winner": game_state.winner
+            "current_player": game_state.current_player_number,
+            "winner": game_state.winner,
         }
 
     for client in clients:
@@ -33,7 +35,9 @@ def handle_client(conn, player_id):
 
     send_json(conn, {
         "type": "welcome",
-        "player_id": player_id + 1
+        "player_id": player_id + 1,
+        "players": game_state.players,
+        "num_players": game_state.num_players
     })
 
     buffer = ""
@@ -61,7 +65,7 @@ def handle_client(conn, player_id):
 
                     with game_lock:
 
-                        if player_id != game_state.current_player:
+                        if player_id != game_state.current_player_index:
 
                             send_json(conn, {
                                 "type": "error",
@@ -98,14 +102,19 @@ def handle_client(conn, player_id):
 
 
 def start_server():
+
+    global game_state
+
+    game_state = GameState(num_players)
+
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((HOST, PORT))
-    server.listen(2)
+    server.listen(num_players)
 
     print("Waiting for players...")
 
-    while len(clients) < 2:
+    while len(clients) < num_players:
         conn, addr = server.accept()
         print(f"Connected: {addr}")
         clients.append(conn)
