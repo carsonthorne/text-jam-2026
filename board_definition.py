@@ -192,6 +192,15 @@ HOME_COLORS = {
     "NW": "dark_orange",
 }
 
+ZONE_BG_COLORS = {
+    "red1": "red3",
+    "white": "bright_black",
+    "purple4": "blue_violet",
+    "spring_green3": "spring_green4",
+    "dodger_blue2": "dark_blue",
+    "dark_orange": "orange_red1",
+}
+
 VALID_COORDS = {
     coord
     for tiles in ROWS.values()
@@ -199,7 +208,6 @@ VALID_COORDS = {
 }
 
 COORD_TO_ZONE = {}
-
 for zone, coords in HOME_ZONES.items():
 
     for coord in coords:
@@ -230,6 +238,20 @@ PLAYER_CONFIGS = {
         {"player": 6, "start": "NW", "goal": "SE"}
     ]
 }
+
+CURSOR_PULSE_GREYS = [
+    "grey23",
+    "grey27",
+    "grey30",
+    "grey35",
+    "grey39",
+    "grey42",
+    "grey46",
+    "grey50",
+    "grey54",
+    "grey58",
+    "grey62",
+]
 
 HEX_DIRECTIONS = [
     (1, 0),

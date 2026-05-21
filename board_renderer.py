@@ -6,7 +6,9 @@ from board_definition import (
     ROWS,
     SPACING,
     COORD_TO_ZONE,
-    HOME_COLORS
+    HOME_COLORS,
+    CURSOR_PULSE_GREYS,
+    ZONE_BG_COLORS
 )
 
 class BoardRenderer:
@@ -34,19 +36,7 @@ class BoardRenderer:
             )
         
         EMPTY_STYLE = Style(color="white")
-        HOME_EMPTY_STYLE = Style(color="black")
-
-        CURSOR_STYLE = Style(bgcolor="grey50", bold=True)
         SELECTED_STYLE = Style(bgcolor="grey50")
-
-        ZONE_BG_COLORS = {
-            "red1": "red3",
-            "white": "bright_black",
-            "purple4": "blue_violet",
-            "spring_green3": "spring_green4",
-            "dodger_blue2": "dark_blue",
-            "dark_orange": "orange_red1",
-        }
         
         if selected_path is None:
             selected_path = []
@@ -72,27 +62,13 @@ class BoardRenderer:
                     bg_color = ZONE_BG_COLORS[zone_color]
                     background_style = Style(bgcolor=bg_color)
 
-                # Cursor highlight
+                # Cursor pulse highlight
                 if coord == cursor:
 
                     phase = (math.sin(tick * 0.25) + 1) / 2
 
-                    grey_levels = [
-                        "grey23",
-                        "grey27",
-                        "grey30",
-                        "grey35",
-                        "grey39",
-                        "grey42",
-                        "grey46",
-                        "grey50",
-                        "grey54",
-                        "grey58",
-                        "grey62",
-                    ]
-
-                    index = int(phase * (len(grey_levels) - 1))
-                    pulse_color = grey_levels[index]
+                    index = int(phase * (len(CURSOR_PULSE_GREYS) - 1))
+                    pulse_color = CURSOR_PULSE_GREYS[index]
 
                     overlay_style = Style(bgcolor=pulse_color, bold=True)
 
