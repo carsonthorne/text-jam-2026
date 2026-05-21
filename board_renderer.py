@@ -36,6 +36,15 @@ class BoardRenderer:
 
         CURSOR_STYLE = Style(bgcolor="grey50", bold=True)
         SELECTED_STYLE = Style(bgcolor="grey50")
+
+        ZONE_BG_COLORS = {
+            "red1": "red3",
+            "white": "bright_black",
+            "purple4": "blue_violet",
+            "spring_green3": "spring_green4",
+            "dodger_blue2": "dark_blue",
+            "dark_orange": "orange_red1",
+        }
         
         if selected_path is None:
             selected_path = []
@@ -50,35 +59,38 @@ class BoardRenderer:
 
                 occupant = board.get(coord)
 
-                home_zone = COORD_TO_ZONE.get(coord)
-                bg_color = HOME_COLORS.get(home_zone)
+                background_style = Style()
+                overlay_style = Style()
+                foreground_style = Style()
 
-                cell_style = Style(bgcolor=bg_color) if bg_color else Style()
+                home_zone = COORD_TO_ZONE.get(coord)
+
+                if home_zone:
+                    zone_color = HOME_COLORS[home_zone]
+                    bg_color = ZONE_BG_COLORS[zone_color]
+                    background_style = Style(bgcolor=bg_color)
 
                 # Cursor highlight
                 if coord == cursor:
-                    cell_style += CURSOR_STYLE
+                    overlay_style += CURSOR_STYLE
 
                 # Selected path highlight
                 if coord in selected_path:
-                    cell_style += SELECTED_STYLE
+                    overlay_style += SELECTED_STYLE
 
                 if occupant is None:
-                    if coord == cursor:
-                        style = HOME_EMPTY_STYLE
-                    else:
-                        style = EMPTY_STYLE
-
-                    cell = Text("○", style=cell_style + style)
+                    
+                    foreground_style = EMPTY_STYLE
+                    char = "○"
 
                 elif occupant is not None:
 
-                    piece_style = PLAYER_STYLES.get(occupant)
-
-                    cell = Text(
-                        "●", style=cell_style + piece_style
-                    )
+                    foreground_style = PLAYER_STYLES.get(occupant, Style())
+                    char = "●"
                 
+                final_style = background_style + overlay_style + foreground_style
+                cell = Text(char, style=final_style)
+
                 line.append(cell)
                 line.append(" ")
 
