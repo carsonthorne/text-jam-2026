@@ -185,10 +185,10 @@ HOME_ZONES = {
 
 HOME_COLORS = {
     "N":  "red1",
-    "NE": "grey23",
+    "NE": "bright_black",
     "SE": "purple4",
     "S":  "spring_green3",
-    "SW": "grey50",
+    "SW": "dodger_blue2",
     "NW": "dark_orange",
 }
 

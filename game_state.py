@@ -91,42 +91,13 @@ class GameState:
                     return True
         
         return False
+    
+    def is_valid_partial_move(self, player_id, path):
 
-    def is_valid_move(self, player_id, path):
-
-        if len(path) < 2:
-            return False, "Invalid move."
+        if len(path) < 1:
+            return False, "Invalid selection."
         
         move_from = path[0]
-        move_to = path[-1]
-
-        from_zone = self.get_zone_for_coord(move_from)
-        to_zone = self.get_zone_for_coord(move_to)
-
-        player_number = player_id + 1
-
-        player_config = next(
-            p for p in self.players
-            if p["player"] == player_number
-        )
-
-        start_zone = player_config["start"]
-        target_zone = player_config["goal"]
-
-        # Prevent returning to home triangle
-        if from_zone is None and to_zone == start_zone:
-            return False, "Cannot return to your starting triangle."
-
-        # Prevent landing in non-target triangles
-        if to_zone is not None:
-            
-            if to_zone != start_zone and to_zone != target_zone:
-                return False, "Cannot enter opponent home triangle."
-
-        # Once inside target triangle,
-        # the piece cannot leave it
-        if to_zone is None and from_zone == target_zone:
-            return False, "Piece cannot leave goal zone."
 
         # Is source tile valid?
         if move_from not in self.board:
@@ -135,14 +106,18 @@ class GameState:
         # Is there actually a piece there?
         if self.board[move_from] is None:
             return False, "No piece there."
-
+        
         # Is it player's piece?
         if self.board[move_from] != player_id + 1:
             return False, "Not your piece."
-
-        # -------------
+        
+        # Only selecting first tile
+        if len(path) == 1:
+            return True, ""
+        
+        # --------------
         # Adjacent move
-        # -------------
+        # --------------
 
         if len(path) == 2:
 
@@ -151,17 +126,17 @@ class GameState:
             # Is destination tile valid?
             if destination not in self.board:
                 return False, "Invalid destination tile."
-
+            
             # Is destination occupied?
             if self.board[destination] is not None:
                 return False, "Destination occupied."
-
+            
             if self.is_adjacent_move(move_from, destination):
                 return True, ""
             
-        #-----------
+        # -----------
         # Jump chain
-        #-----------
+        # -----------
 
         visited = {move_from}
 
@@ -187,7 +162,54 @@ class GameState:
             # Must be a legal jump
             if not self.is_jump_move(current, nxt):
                 return False, "Illegal jump."
+            
+        return True, ""
 
+    def is_valid_move(self, player_id, path):
+
+        if len(path) < 2:
+            return False, "Invalid move."
+        
+        # First validate the actual movement mechanics
+        valid, reason = self.is_valid_partial_move(
+            player_id,
+            path
+        )
+
+        if not valid:
+            return False, reason
+        
+        move_from = path[0]
+        move_to = path[-1]
+
+        from_zone = self.get_zone_for_coord(move_from)
+        to_zone = self.get_zone_for_coord(move_to)
+
+        player_number = player_id + 1
+
+        player_config = next(
+            p for p in self.players
+            if p["player"] == player_number
+        )
+
+        start_zone = player_config["start"]
+        target_zone = player_config["goal"]
+
+        # Prevent returning to home triangle
+        if from_zone is None and to_zone == start_zone:
+            return False, "Cannot return to your starting triangle."
+        
+        # Prevent landing in non-target triangles
+        if to_zone is not None:
+
+            if to_zone != start_zone and to_zone != target_zone:
+                return False, "Cannot enter opponent home triangle."
+            
+        # Once inside target triangle,
+        # the piece cannot leave it
+        if to_zone is None and from_zone == target_zone:
+            return False, "Piece cannot leave goal zone."
+        
         return True, ""
             
     def apply_move(self, move_from, move_to):

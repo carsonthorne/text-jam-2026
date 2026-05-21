@@ -115,6 +115,18 @@ class ChineseCheckersApp(App):
                             f"[bold green]You are player {self.player_id}[/]"
                         )
 
+                    elif msg_type == "partial_validation":
+
+                        valid = data["valid"]
+                        message = data["message"]
+
+                        self.call_from_thread(
+                            self.handle_partial_validation,
+                            valid,
+                            message,
+                            self.cursor
+                        )
+
                     elif msg_type == "game_state":
 
                         serialized_board = data["board"]
@@ -248,9 +260,16 @@ class ChineseCheckersApp(App):
 
         elif key == "space":
 
-            self.selected_path.append(self.cursor)
+            proposed_path = self.selected_path + [self.cursor]
 
-            self.refresh_board()
+            send_json(self.client, {
+                "type": "validate_partial",
+                "path": proposed_path
+            })
+            
+            # self.selected_path.append(self.cursor)
+
+            # self.refresh_board()
 
         elif key == "enter":
 
@@ -262,12 +281,32 @@ class ChineseCheckersApp(App):
 
                 self.refresh_board()
 
+        elif key == "escape":
+
+            if self.selected_path:
+
+                self.selected_path.pop()
+
+                self.refresh_board()
+
     def send_move(self):
 
         send_json(self.client, {
             "type": "move",
             "path": self.selected_path
         })
+
+    def handle_partial_validation(self, valid, message, coord):
+
+        if valid:
+
+            self.selected_path.append(coord)
+
+            self.refresh_board()
+
+        else:
+
+            self.show_error(message)
 
     def log_message(self, message):
         self.message_log.write(message)

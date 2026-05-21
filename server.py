@@ -1,12 +1,13 @@
 import socket
 import threading
 import json
+import traceback
 from game_state import GameState
 
 HOST = "127.0.0.1"
 PORT = 5555
 
-num_players = 2
+num_players = 6
 
 clients = []
 game_state = None
@@ -60,6 +61,25 @@ def handle_client(conn, player_id):
 
                 data = json.loads(line)
 
+                if data["type"] == "validate_partial":
+
+                    with game_lock:
+
+                        path = [tuple(coord) for coord in data["path"]]
+
+                        valid, reason = game_state.is_valid_partial_move(
+                            player_id,
+                            path
+                        )
+
+                    send_json(conn, {
+                        "type": "partial_validation",
+                        "valid": valid,
+                        "message": reason
+                    })
+
+                    continue
+
                 # Player attempting move
                 if data["type"] == "move":
 
@@ -95,7 +115,8 @@ def handle_client(conn, player_id):
                     broadcast_game_state()
 
         except Exception as e:
-            print("Error:", e)
+            # print("Error:", e)
+            traceback.print_exc()
             break
 
     conn.close()
