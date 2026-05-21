@@ -6,9 +6,8 @@ from board_definition import (
     ROWS,
     SPACING,
     COORD_TO_ZONE,
-    HOME_COLORS,
     CURSOR_PULSE_GREYS,
-    ZONE_BG_COLORS
+    COLORS
 )
 
 class BoardRenderer:
@@ -22,18 +21,13 @@ class BoardRenderer:
         tick=0
     ):
 
-        PLAYER_STYLES = {}
-
-        for config in player_configs:
-
-            player_number = config["player"]
-
-            goal_zone = config["goal"]
-
-            PLAYER_STYLES[player_number] = Style(
-                color=HOME_COLORS[goal_zone],
+        PLAYER_STYLES = {
+            config["player"]: Style(
+                color=config["piece"],
                 bold=True
             )
+            for config in player_configs
+        }
         
         EMPTY_STYLE = Style(color="white")
         SELECTED_STYLE = Style(bgcolor="grey50")
@@ -58,8 +52,7 @@ class BoardRenderer:
                 home_zone = COORD_TO_ZONE.get(coord)
 
                 if home_zone:
-                    zone_color = HOME_COLORS[home_zone]
-                    bg_color = ZONE_BG_COLORS[zone_color]
+                    bg_color = COLORS[home_zone]["zone"]
                     background_style = Style(bgcolor=bg_color)
 
                 # Cursor pulse highlight

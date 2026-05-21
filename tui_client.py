@@ -277,10 +277,6 @@ class ChineseCheckersApp(App):
                 "type": "validate_partial",
                 "path": proposed_path
             })
-            
-            # self.selected_path.append(self.cursor)
-
-            # self.refresh_board()
 
         elif key == "enter":
 

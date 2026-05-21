@@ -183,22 +183,31 @@ HOME_ZONES = {
     "NW": {(-8,4), (-7,4), (-6,4), (-5,4), (-8,5), (-7,5), (-6,5), (-8,6), (-7,6), (-8,7)},
 }
 
-HOME_COLORS = {
-    "N":  "red1",
-    "NE": "white",
-    "SE": "purple4",
-    "S":  "spring_green3",
-    "SW": "dodger_blue2",
-    "NW": "dark_orange",
-}
-
-ZONE_BG_COLORS = {
-    "red1": "red3",
-    "white": "bright_black",
-    "purple4": "blue_violet",
-    "spring_green3": "spring_green4",
-    "dodger_blue2": "dark_blue",
-    "dark_orange": "orange_red1",
+COLORS = {
+    "N": {
+        "zone": "red1",
+        "piece": "red3"
+    },
+    "NE": {
+        "zone": "white",
+        "piece": "bright_black"
+    },
+    "SE": {
+        "zone": "purple4",
+        "piece": "blue_violet"
+    },
+    "S": {
+        "zone": "spring_green3",
+        "piece": "spring_green4"
+    },
+    "SW": {
+        "zone": "dodger_blue2",
+        "piece": "dark_blue"
+    },
+    "NW": {
+        "zone": "dark_orange",
+        "piece": "orange_red1"
+    }
 }
 
 VALID_COORDS = {
@@ -215,27 +224,27 @@ for zone, coords in HOME_ZONES.items():
 
 PLAYER_CONFIGS = {
     2: [
-        {"player": 1, "start": "N", "goal": "S"},
-        {"player": 2, "start": "S", "goal": "N"}
+        {"player": 1, "start": "N", "goal": "S", "piece": COLORS["S"]["piece"]},
+        {"player": 2, "start": "S", "goal": "N", "piece": COLORS["N"]["piece"]}
     ],
     3: [
-        {"player": 1, "start": "N", "goal": "S"},
-        {"player": 2, "start": "SE", "goal": "NW"},
-        {"player": 3, "start": "SW", "goal": "NE"}
+        {"player": 1, "start": "N", "goal": "S", "piece": COLORS["S"]["piece"]},
+        {"player": 2, "start": "SE", "goal": "NW", "piece": COLORS["NW"]["piece"]},
+        {"player": 3, "start": "SW", "goal": "NE", "piece": COLORS["NE"]["piece"]}
     ],
     4: [
-        {"player": 1, "start": "NW", "goal": "SE"},
-        {"player": 2, "start": "NE", "goal": "SW"},
-        {"player": 3, "start": "SE", "goal": "NW"},
-        {"player": 4, "start": "SW", "goal": "NE"}
+        {"player": 1, "start": "NW", "goal": "SE", "piece": COLORS["SE"]["piece"]},
+        {"player": 2, "start": "NE", "goal": "SW", "piece": COLORS["SW"]["piece"]},
+        {"player": 3, "start": "SE", "goal": "NW", "piece": COLORS["NW"]["piece"]},
+        {"player": 4, "start": "SW", "goal": "NE", "piece": COLORS["NE"]["piece"]}
     ],
     6: [
-        {"player": 1, "start": "N", "goal": "S"},
-        {"player": 2, "start": "NE", "goal": "SW"},
-        {"player": 3, "start": "SE", "goal": "NW"},
-        {"player": 4, "start": "S", "goal": "N"},
-        {"player": 5, "start": "SW", "goal": "NE"},
-        {"player": 6, "start": "NW", "goal": "SE"}
+        {"player": 1, "start": "N", "goal": "S", "piece": COLORS["S"]["piece"]},
+        {"player": 2, "start": "NE", "goal": "SW", "piece": COLORS["SW"]["piece"]},
+        {"player": 3, "start": "SE", "goal": "NW", "piece": COLORS["NW"]["piece"]},
+        {"player": 4, "start": "S", "goal": "N", "piece": COLORS["N"]["piece"]},
+        {"player": 5, "start": "SW", "goal": "NE", "piece": COLORS["NE"]["piece"]},
+        {"player": 6, "start": "NW", "goal": "SE", "piece": COLORS["SE"]["piece"]}
     ]
 }
 
