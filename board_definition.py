@@ -231,7 +231,6 @@ PLAYER_CONFIGS = {
     ]
 }
 
-
 HEX_DIRECTIONS = [
     (1, 0),
     (1, -1),

@@ -50,6 +50,8 @@ class ChineseCheckersApp(App):
 
         self.my_turn = False
 
+        self.tick = 0
+
     def compose(self) -> ComposeResult:
 
         self.board_widget = Static()
@@ -72,12 +74,20 @@ class ChineseCheckersApp(App):
 
         self.refresh_board()
 
+        self.set_interval(0.08, self.animate_cursor)
+
         receive_thread = threading.Thread(
             target=self.receive_messages,
             daemon=True
         )
 
         receive_thread.start()
+
+    def animate_cursor(self):
+
+        self.tick += 1
+
+        self.refresh_board()
 
     def receive_messages(self):
 
@@ -231,7 +241,8 @@ class ChineseCheckersApp(App):
             self.board,
             self.player_configs,
             self.cursor,
-            self.selected_path
+            self.selected_path,
+            self.tick
         )
 
         self.board_widget.update(board_text)

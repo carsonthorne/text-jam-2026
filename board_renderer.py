@@ -1,3 +1,4 @@
+import math
 from rich.text import Text
 from rich.style import Style
 
@@ -5,7 +6,7 @@ from board_definition import (
     ROWS,
     SPACING,
     COORD_TO_ZONE,
-    HOME_COLORS,
+    HOME_COLORS
 )
 
 class BoardRenderer:
@@ -15,7 +16,8 @@ class BoardRenderer:
         board,
         player_configs,
         cursor=None,
-        selected_path=None
+        selected_path=None,
+        tick=0
     ):
 
         PLAYER_STYLES = {}
@@ -72,7 +74,27 @@ class BoardRenderer:
 
                 # Cursor highlight
                 if coord == cursor:
-                    overlay_style += CURSOR_STYLE
+
+                    phase = (math.sin(tick * 0.25) + 1) / 2
+
+                    grey_levels = [
+                        "grey23",
+                        "grey27",
+                        "grey30",
+                        "grey35",
+                        "grey39",
+                        "grey42",
+                        "grey46",
+                        "grey50",
+                        "grey54",
+                        "grey58",
+                        "grey62",
+                    ]
+
+                    index = int(phase * (len(grey_levels) - 1))
+                    pulse_color = grey_levels[index]
+
+                    overlay_style = Style(bgcolor=pulse_color, bold=True)
 
                 # Selected path highlight
                 if coord in selected_path:
