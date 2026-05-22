@@ -258,6 +258,46 @@ class ChineseCheckersApp(App):
 
         self.board_widget.update(board_text)
 
+    def cycle_to_next_piece(self):
+
+        # Only allow cycling before selecting a piece
+        if self.selected_path:
+            return
+        
+        player_number = self.player_id
+
+        player_pieces = sorted(
+            [
+                coord
+                for coord, occupant in self.board.items()
+                if occupant == player_number
+            ],
+            key=lambda coord: (coord[1], coord[0])
+        )
+
+        if not player_pieces:
+            return
+        
+        # If cursor isn't on one of the player's pieces,
+        # jump to the first one
+        if self.cursor not in player_pieces:
+
+            self.cursor = player_pieces[0]
+
+            self.refresh_board()
+
+            return
+        
+        current_index = player_pieces.index(self.cursor)
+
+        next_index = (
+            current_index + 1
+        ) % len(player_pieces)
+
+        self.cursor = player_pieces[next_index]
+
+        self.refresh_board()
+
     def on_key(self, event: Key):
 
         if not self.my_turn:
@@ -279,6 +319,10 @@ class ChineseCheckersApp(App):
                 self.cursor = new_coord
 
                 self.refresh_board()
+
+        elif key == "tab":
+
+            self.cycle_to_next_piece()
 
         elif key == "space":
 
