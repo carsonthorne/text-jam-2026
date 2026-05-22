@@ -305,6 +305,8 @@ class ChineseCheckersApp(App):
 
                 self.selected_path.pop()
 
+                self.cursor = self.selected_path[-1]
+
                 self.refresh_board()
 
     def send_move(self):

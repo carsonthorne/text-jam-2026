@@ -63,9 +63,10 @@ class BoardRenderer:
                     index = int(phase * (len(CURSOR_PULSE_GREYS) - 1))
                     pulse_color = CURSOR_PULSE_GREYS[index]
 
-                    overlay_style = Style(bgcolor=pulse_color, bold=True)
+                    overlay_style = Style(bgcolor=pulse_color, bold=True, underline=True)
 
                 # Selected path highlight
+                # if coord in selected_path and coord != cursor: // Should we pulse on selected & cursor?
                 if coord in selected_path:
                     overlay_style += SELECTED_STYLE
 
