@@ -7,6 +7,7 @@ import threading
 import json
 
 from board_renderer import BoardRenderer
+from board_definition import ZONE_CURSOR_STARTS
 
 DIRECTION_KEYS = {
     "w": (0, -1),
@@ -38,7 +39,7 @@ class ChineseCheckersApp(App):
 
         self.player_configs = []
 
-        self.cursor = (0, 0)
+        self.cursor = None
 
         self.selected_path = []
 
@@ -120,6 +121,16 @@ class ChineseCheckersApp(App):
                         self.player_id = data["player_id"]
                         self.player_configs = data["players"]
 
+                        player_config = next(
+                            config
+                            for config in self.player_configs
+                            if config["player"] == self.player_id
+                        )
+
+                        start_zone = player_config["start"]
+
+                        self.cursor = ZONE_CURSOR_STARTS[start_zone]
+
                         self.call_from_thread(
                             self.log_message,
                             f"[bold green]You are player {self.player_id}[/]"
@@ -179,10 +190,6 @@ class ChineseCheckersApp(App):
 
         self.board = new_board
 
-        if self.cursor not in self.board:
-
-            self.cursor = next(iter(self.board))
-
         #-----------------
         # Handle game over
         #-----------------
@@ -236,11 +243,15 @@ class ChineseCheckersApp(App):
 
         if not self.board:
             return
+        
+        visible_cursor = (
+            self.cursor if self.my_turn else None
+        )
 
         board_text = self.renderer.build_board_text(
             self.board,
             self.player_configs,
-            self.cursor,
+            visible_cursor,
             self.selected_path,
             self.tick
         )
