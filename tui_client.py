@@ -303,7 +303,7 @@ class ChineseCheckersApp(App):
         if not self.my_turn:
             return
 
-        key = event.key
+        key = event.key.lower()
 
         if key in DIRECTION_KEYS:
 
@@ -347,9 +347,9 @@ class ChineseCheckersApp(App):
 
             if self.selected_path:
 
-                self.selected_path.pop()
-
                 self.cursor = self.selected_path[-1]
+
+                self.selected_path.pop()
 
                 self.refresh_board()
 

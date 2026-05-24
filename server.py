@@ -7,7 +7,7 @@ from game_state import GameState
 HOST = "127.0.0.1"
 PORT = 5555
 
-num_players = 6
+num_players = 2
 
 clients = []
 game_state = None
@@ -37,8 +37,7 @@ def handle_client(conn, player_id):
     send_json(conn, {
         "type": "welcome",
         "player_id": player_id + 1,
-        "players": game_state.players,
-        "num_players": game_state.num_players
+        "players": game_state.players
     })
 
     buffer = ""
@@ -61,6 +60,7 @@ def handle_client(conn, player_id):
 
                 data = json.loads(line)
 
+                # Player making selection
                 if data["type"] == "validate_partial":
 
                     with game_lock:
@@ -80,7 +80,7 @@ def handle_client(conn, player_id):
 
                     continue
 
-                # Player attempting move
+                # Player submitting move
                 if data["type"] == "move":
 
                     with game_lock:
