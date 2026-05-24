@@ -47,7 +47,7 @@ class ChineseCheckersApp(App):
 
         self.client.connect((HOST, PORT))
 
-        self.player_id = None
+        self.player_number = None
 
         self.my_turn = False
 
@@ -118,13 +118,13 @@ class ChineseCheckersApp(App):
 
                     if msg_type == "welcome":
 
-                        self.player_id = data["player_id"]
+                        self.player_number = data["player_number"]
                         self.player_configs = data["players"]
 
                         player_config = next(
                             config
                             for config in self.player_configs
-                            if config["player"] == self.player_id
+                            if config["player"] == self.player_number
                         )
 
                         start_zone = player_config["start"]
@@ -133,7 +133,7 @@ class ChineseCheckersApp(App):
 
                         self.call_from_thread(
                             self.log_message,
-                            f"[bold green]You are player {self.player_id}[/]"
+                            f"[bold green]You are player {self.player_number}[/]"
                         )
 
                     elif msg_type == "partial_validation":
@@ -198,7 +198,7 @@ class ChineseCheckersApp(App):
 
             self.my_turn = False
 
-            if winner == self.player_id:
+            if winner == self.player_number:
 
                 self.log_message(
                     "[bold green]You win![/]"
@@ -221,7 +221,7 @@ class ChineseCheckersApp(App):
         was_my_turn = self.my_turn
 
         self.my_turn = (
-            current_player == self.player_id
+            current_player == self.player_number
         )
 
         if self.my_turn and not was_my_turn:
@@ -264,13 +264,11 @@ class ChineseCheckersApp(App):
         if self.selected_path:
             return
         
-        player_number = self.player_id
-
         player_pieces = sorted(
             [
                 coord
                 for coord, occupant in self.board.items()
-                if occupant == player_number
+                if occupant == self.player_number
             ],
             key=lambda coord: (coord[1], coord[0])
         )

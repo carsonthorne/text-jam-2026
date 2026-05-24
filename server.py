@@ -32,11 +32,11 @@ def broadcast_game_state():
     for client in clients:
         send_json(client, state_message)
 
-def handle_client(conn, player_id):
+def handle_client(conn, player_number):
 
     send_json(conn, {
         "type": "welcome",
-        "player_id": player_id + 1,
+        "player_number": player_number,
         "players": game_state.players
     })
 
@@ -68,7 +68,7 @@ def handle_client(conn, player_id):
                         path = [tuple(coord) for coord in data["path"]]
 
                         valid, reason = game_state.is_valid_partial_move(
-                            player_id,
+                            player_number,
                             path
                         )
 
@@ -85,7 +85,7 @@ def handle_client(conn, player_id):
 
                     with game_lock:
 
-                        if player_id != game_state.current_player_index:
+                        if not game_state.is_players_turn(player_number):
 
                             send_json(conn, {
                                 "type": "error",
@@ -97,7 +97,7 @@ def handle_client(conn, player_id):
                         path = [tuple(coord) for coord in data["path"]]
 
                         valid, reason = game_state.is_valid_move(
-                            player_id,
+                            player_number,
                             path
                         )
 
@@ -121,7 +121,6 @@ def handle_client(conn, player_id):
 
     conn.close()
 
-
 def start_server():
 
     global game_state
@@ -141,7 +140,14 @@ def start_server():
         clients.append(conn)
 
     for i, conn in enumerate(clients):
-        thread = threading.Thread(target=handle_client, args=(conn, i))
+        
+        player_number = game_state.players[i]["player"]
+
+        thread = threading.Thread(
+            target=handle_client,
+            args=(conn, player_number)
+        )
+
         thread.start()
 
     print("Game starting!")

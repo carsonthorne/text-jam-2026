@@ -15,13 +15,18 @@ class GameState:
 
         self.board = {}
         self.current_player_index = 0
-        self.current_player_number = (
-            self.players[self.current_player_index]["player"]
-        )
 
         self.winner = None
 
         self.initialize_board()
+
+    @property
+    def current_player(self):
+        return self.players[self.current_player_index]
+    
+    @property
+    def current_player_number(self):
+        return self.current_player["player"]
 
     def initialize_board(self):
 
@@ -55,6 +60,9 @@ class GameState:
 
         return player_positions == target_zone
     
+    def is_players_turn(self, player_number):
+        return player_number == self.current_player_number
+
     def get_zone_for_coord(self, coord):
         for zone_name, coords in HOME_ZONES.items():
 
@@ -93,7 +101,7 @@ class GameState:
         
         return False
     
-    def is_valid_partial_move(self, player_id, path):
+    def is_valid_partial_move(self, player_number, path):
 
         if len(path) < 1:
             return False, "Invalid selection."
@@ -109,7 +117,7 @@ class GameState:
             return False, "No piece there."
         
         # Is it player's piece?
-        if self.board[move_from] != player_id + 1:
+        if self.board[move_from] != player_number:
             return False, "Not your piece."
         
         # Only selecting first tile
@@ -166,14 +174,14 @@ class GameState:
             
         return True, ""
 
-    def is_valid_move(self, player_id, path):
+    def is_valid_move(self, player_number, path):
 
         if len(path) < 2:
             return False, "Invalid move."
         
         # First validate the actual movement mechanics
         valid, reason = self.is_valid_partial_move(
-            player_id,
+            player_number,
             path
         )
 
@@ -185,8 +193,6 @@ class GameState:
 
         from_zone = self.get_zone_for_coord(move_from)
         to_zone = self.get_zone_for_coord(move_to)
-
-        player_number = player_id + 1
 
         player_config = next(
             p for p in self.players
@@ -229,13 +235,14 @@ class GameState:
             return
         
         # Next turn
+
+        self.next_turn()
+
+    def next_turn(self):
+
         self.current_player_index = (
             self.current_player_index + 1
         ) % self.num_players
-
-        self.current_player_number = (
-            self.players[self.current_player_index]["player"]
-        )
 
     def serialize_board(self):
 
