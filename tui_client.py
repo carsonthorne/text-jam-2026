@@ -7,7 +7,7 @@ import threading
 import json
 
 from board_renderer import BoardRenderer
-from board_definition import ZONE_CURSOR_STARTS
+from board_layout import ZONE_CURSOR_STARTS
 
 DIRECTION_KEYS = {
     "w": (0, -1),

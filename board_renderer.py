@@ -2,12 +2,8 @@ import math
 from rich.text import Text
 from rich.style import Style
 
-from board_definition import (
-    ROWS,
-    COORD_TO_ZONE,
-    CURSOR_PULSE_GREYS,
-    COLORS
-)
+from board_layout import ROWS, COORD_TO_ZONE
+from theme import COLORS, CURSOR_PULSE_GREYS
 
 class BoardRenderer:
 

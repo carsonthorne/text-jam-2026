@@ -1,9 +1,10 @@
-from board_definition import (
+from board_layout import (
     VALID_COORDS,
     HEX_DIRECTIONS,
     HOME_ZONES,
-    PLAYER_CONFIGS
 )
+
+from player_configs import PLAYER_CONFIGS
 
 class GameState:
 
