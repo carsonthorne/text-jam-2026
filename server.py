@@ -3,6 +3,7 @@ import threading
 import json
 import traceback
 from game_state import GameState
+from move_validator import validate_partial_move, validate_move
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -67,7 +68,8 @@ def handle_client(conn, player_number):
 
                         path = [tuple(coord) for coord in data["path"]]
 
-                        valid, reason = game_state.is_valid_partial_move(
+                        valid, reason = validate_partial_move(
+                            game_state.board,
                             player_number,
                             path
                         )
@@ -96,7 +98,9 @@ def handle_client(conn, player_number):
 
                         path = [tuple(coord) for coord in data["path"]]
 
-                        valid, reason = game_state.is_valid_move(
+                        valid, reason = validate_move(
+                            game_state.board,
+                            game_state.players,
                             player_number,
                             path
                         )

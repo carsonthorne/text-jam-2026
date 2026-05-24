@@ -32,25 +32,19 @@ class ChineseCheckersApp(App):
     def __init__(self):
 
         super().__init__()
-
-        self.renderer = BoardRenderer()
-
-        self.board = {}
-
-        self.player_configs = []
-
-        self.cursor = None
-
-        self.selected_path = []
-
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
         self.client.connect((HOST, PORT))
 
+        self.renderer = BoardRenderer()
+        self.board = {}
+        
+        self.player_configs = []
         self.player_number = None
-
+        
         self.my_turn = False
-
+        self.selected_path = []
+        
+        self.cursor = None
         self.tick = 0
 
     def compose(self) -> ComposeResult:
@@ -341,15 +335,13 @@ class ChineseCheckersApp(App):
 
                 self.refresh_board()
 
-        elif key == "escape":
+        elif key == "escape" and self.selected_path:
 
-            if self.selected_path:
+            self.cursor = self.selected_path[-1]
 
-                self.cursor = self.selected_path[-1]
+            self.selected_path.pop()
 
-                self.selected_path.pop()
-
-                self.refresh_board()
+            self.refresh_board()
 
     def send_move(self):
 
