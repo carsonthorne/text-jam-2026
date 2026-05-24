@@ -4,7 +4,6 @@ from rich.style import Style
 
 from board_definition import (
     ROWS,
-    SPACING,
     COORD_TO_ZONE,
     CURSOR_PULSE_GREYS,
     COLORS
@@ -37,11 +36,11 @@ class BoardRenderer:
 
         lines = []
 
-        for row, tiles in ROWS.items():
+        for row in ROWS:
+                
+            line = Text(" " * row["spacing"])
 
-            line = Text(" " * SPACING[row])
-
-            for label, coord in tiles:
+            for coord in row["tiles"]:
 
                 occupant = board.get(coord)
 
