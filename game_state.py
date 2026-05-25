@@ -8,6 +8,13 @@ class GameState:
     def __init__(self, num_players=2):
 
         self.players = PLAYER_CONFIGS[num_players]
+        
+        # self.players = sorted(
+        #     PLAYER_CONFIGS[num_players],
+        #     key=lambda p: p["player"]
+        # )
+        
+        # self.players = []
 
         self.board = create_initial_board(self.players)
         self.current_player_index = 0

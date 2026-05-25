@@ -5,10 +5,13 @@ from textual.events import Key
 import socket
 import threading
 import json
+import sys
+from local_identity import load_identity
 
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
+from local_identity import load_identity
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -26,6 +29,14 @@ class ChineseCheckersApp(App):
         super().__init__()
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((HOST, PORT))
+
+        force_new = "--new" in sys.argv
+        self.identity = load_identity(force_new=force_new)
+        send_json(self.client, {
+            "type": "connect",
+            "player_id": self.identity["player_id"],
+            "name": self.identity["name"]
+        })
 
         self.renderer = BoardRenderer()
         self.board = {}

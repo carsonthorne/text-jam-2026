@@ -2,15 +2,17 @@ import socket
 import threading
 import json
 import traceback
+import time
 from game_state import GameState
 from move_validator import validate_partial_move, validate_move
+from player import Player
 
 HOST = "127.0.0.1"
 PORT = 5555
 
 num_players = 2
 
-clients = []
+players = {}
 game_state = None
 game_lock = threading.Lock()
 
@@ -30,16 +32,90 @@ def broadcast_game_state():
             "winner": game_state.winner,
         }
 
-    for client in clients:
-        send_json(client, state_message)
+    for player in players.values():
 
-def handle_client(conn, player_number):
+        if player.connected and player.connection:
+
+            send_json(player.connection, state_message)
+
+def handle_connection(conn):
+
+    buffer = ""
+
+    chunk = conn.recv(1024).decode()
+
+    buffer += chunk
+
+    line, buffer = buffer.split("\n", 1)
+
+    data = json.loads(line)
+
+    if data["type"] != "connect":
+        conn.close()
+        return
+
+    player_id = data["player_id"]
+
+    # Reconnect player
+    if player_id in players:
+        player = players[player_id]
+        player.attach_connection(conn)
+        player.connected = True
+        player.last_seen = time.time()
+
+    # New players
+    else:
+        if len(players) >= num_players:
+            conn.close()
+            return
+
+        player_number = assign_player_number()
+        if player_number is None:
+            conn.close()
+            return
+
+        player = Player( player_id, player_number, data["name"])
+
+        player.attach_connection(conn)
+
+        players[player_id] = player
+
+        # print("PLAYER STATE:")
+        # for p in players.values():
+        #     print(
+        #         p.player_id,
+        #         p.connected
+        #     )
+
 
     send_json(conn, {
         "type": "welcome",
-        "player_number": player_number,
+        "player_number": player.player_number,
         "players": game_state.players
     })
+
+    send_json(conn, {
+        "type": "game_state",
+        "board": game_state.serialize_board(),
+        "current_player": game_state.current_player_number,
+        "winner": game_state.winner,
+    })
+
+    if len(players) == num_players and all(p.connected for p in players.values()):
+
+
+        # print("GAME STATE CHECK:")
+        # print("Players:")
+        # for p in players.values():
+        #     print(p.player_number, p.player_id, p.connected)
+
+        # print("GameState players:")
+        # print(game_state.players)
+
+
+        print("Game starting!")
+
+        broadcast_game_state()
 
     buffer = ""
 
@@ -70,7 +146,7 @@ def handle_client(conn, player_number):
 
                         valid, reason = validate_partial_move(
                             game_state.board,
-                            player_number,
+                            player.player_number,
                             path
                         )
 
@@ -87,7 +163,7 @@ def handle_client(conn, player_number):
 
                     with game_lock:
 
-                        if not game_state.is_players_turn(player_number):
+                        if not game_state.is_players_turn(player.player_number):
 
                             send_json(conn, {
                                 "type": "error",
@@ -101,7 +177,7 @@ def handle_client(conn, player_number):
                         valid, reason = validate_move(
                             game_state.board,
                             game_state.players,
-                            player_number,
+                            player.player_number,
                             path
                         )
 
@@ -123,7 +199,18 @@ def handle_client(conn, player_number):
             traceback.print_exc()
             break
 
+    player.disconnect()
+
     conn.close()
+
+    print(f"Player {player.player_number} disconnected")
+
+def assign_player_number():
+    used = {p.player_number for p in players.values()}
+    for i in range(1, num_players + 1):
+        if i not in used:
+            return i
+    return None
 
 def start_server():
 
@@ -138,25 +225,18 @@ def start_server():
 
     print("Waiting for players...")
 
-    while len(clients) < num_players:
-        conn, addr = server.accept()
-        print(f"Connected: {addr}")
-        clients.append(conn)
+    while True:
 
-    for i, conn in enumerate(clients):
-        
-        player_number = game_state.players[i]["player"]
+        conn, addr = server.accept()
+
+        print(f"Connected: {addr}")
 
         thread = threading.Thread(
-            target=handle_client,
-            args=(conn, player_number)
+            target=handle_connection,
+            args=(conn,)
         )
 
         thread.start()
-
-    print("Game starting!")
-    broadcast_game_state()
-
 
 if __name__ == "__main__":
     start_server()
