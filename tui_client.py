@@ -8,15 +8,7 @@ import json
 
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
-
-DIRECTION_KEYS = {
-    "w": (0, -1),
-    "e": (1, -1),
-    "d": (1, 0),
-    "x": (0, 1),
-    "z": (-1, 1),
-    "a": (-1, 0),
-}
+from geometry import DIRECTIONS
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -297,9 +289,10 @@ class ChineseCheckersApp(App):
 
         key = event.key.lower()
 
-        if key in DIRECTION_KEYS:
+        # if key in DIRECTION_KEYS:
+        if key in DIRECTIONS:
 
-            direction = DIRECTION_KEYS[key]
+            direction = DIRECTIONS[key]
 
             new_coord = (
                 self.cursor[0] + direction[0],

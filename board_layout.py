@@ -92,18 +92,3 @@ VALID_COORDS = {
     for row in ROWS
     for coord in row["tiles"]
 }
-
-# COORD_TO_ZONE = {}
-# for zone, coords in HOME_ZONES.items():
-
-#     for coord in coords:
-#         COORD_TO_ZONE[coord] = zone
-
-HEX_DIRECTIONS = [
-    (1, 0),
-    (1, -1),
-    (0, -1),
-    (-1, 0),
-    (-1, 1),
-    (0, 1)
-]

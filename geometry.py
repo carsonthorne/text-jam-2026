@@ -1,4 +1,13 @@
-from board_layout import HEX_DIRECTIONS, HOME_ZONES
+from board_layout import HOME_ZONES
+
+DIRECTIONS = {
+    "w": (0, -1),
+    "e": (1, -1),
+    "d": (1, 0),
+    "x": (0, 1),
+    "z": (-1, 1),
+    "a": (-1, 0),
+}
 
 def add_coords(a, b):
     
@@ -15,7 +24,7 @@ def get_zone_for_coord(coord):
 
 def is_adjacent_move(move_from, move_to):
 
-    for direction in HEX_DIRECTIONS:
+    for direction in DIRECTIONS.values():
 
         neighbor = add_coords(move_from, direction)
 
@@ -26,7 +35,7 @@ def is_adjacent_move(move_from, move_to):
 
 def is_jump_move(board, move_from, move_to):
 
-    for direction in HEX_DIRECTIONS:
+    for direction in DIRECTIONS.values():
 
         middle = add_coords(move_from, direction)
 

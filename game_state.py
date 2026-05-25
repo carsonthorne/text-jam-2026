@@ -23,7 +23,7 @@ class GameState:
         return self.current_player["player"]
     
     def is_players_turn(self, player_number):
-        return player_number == self.current_player_number 
+        return player_number == self.current_player_number
             
     def apply_move(self, move_from, move_to):
 
