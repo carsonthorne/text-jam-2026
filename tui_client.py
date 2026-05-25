@@ -335,6 +335,14 @@ class ChineseCheckersApp(App):
 
                 self.refresh_board()
 
+            elif len(self.selected_path) == 1:
+
+                self.log_message("[bold red]Invalid move:[/] Select a tile to move to.")
+
+            else:
+
+                self.log_message("[bold red]Invalid move:[/] Select a piece to move.")
+
         elif key == "escape" and self.selected_path:
 
             self.cursor = self.selected_path[-1]

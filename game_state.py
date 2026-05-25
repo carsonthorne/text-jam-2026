@@ -7,7 +7,6 @@ class GameState:
 
     def __init__(self, num_players=2):
 
-        self.num_players = num_players
         self.players = PLAYER_CONFIGS[num_players]
 
         self.board = create_initial_board(self.players)
@@ -48,7 +47,7 @@ class GameState:
 
         self.current_player_index = (
             self.current_player_index + 1
-        ) % self.num_players
+        ) % len(self.players)
 
     def serialize_board(self):
 

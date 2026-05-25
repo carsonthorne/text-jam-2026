@@ -2,8 +2,9 @@ import math
 from rich.text import Text
 from rich.style import Style
 
-from board_layout import ROWS, COORD_TO_ZONE
+from board_layout import ROWS
 from theme import COLORS, CURSOR_PULSE_GREYS
+from geometry import get_zone_for_coord
 
 class BoardRenderer:
 
@@ -44,7 +45,7 @@ class BoardRenderer:
                 overlay_style = Style()
                 foreground_style = Style()
 
-                home_zone = COORD_TO_ZONE.get(coord)
+                home_zone = get_zone_for_coord(coord)
 
                 if home_zone:
                     bg_color = COLORS[home_zone]["zone"]
