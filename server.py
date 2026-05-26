@@ -7,7 +7,7 @@ import time
 from player import Player
 from session_manager import SessionManager
 from session import Session
-from network import send_json
+from network import send_json, receive_json
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -19,13 +19,11 @@ def handle_connection(manager, conn):
 
     buffer = ""
 
-    chunk = conn.recv(1024).decode()
+    data, buffer = receive_json(conn, buffer)
 
-    buffer += chunk
-
-    line, buffer = buffer.split("\n", 1)
-
-    data = json.loads(line)
+    if data is None:
+        conn.close()
+        return
 
     if data["type"] != "connect":
         conn.close()
@@ -66,15 +64,26 @@ def handle_connection(manager, conn):
         player.attach_connection(conn)
         player.connected = True
         player.last_seen = time.time()
+        session.touch()
+
+        send_json(conn, {"type": "reconnected"})
 
     # New players
     else:
         if len(session.players) >= session.num_players:
+            send_json(conn, {
+                "type": "error",
+                "message": "Session is full."
+            })
             conn.close()
             return
 
         player_number = session.assign_player_number()
         if player_number is None:
+            send_json(conn, {
+                "type": "error",
+                "message": "Session is full."
+            })
             conn.close()
             return
 
@@ -90,6 +99,9 @@ def handle_connection(manager, conn):
         "players": session.game_state.players,
         "session_id": session.session_id
     })
+
+    if session.state == "lobby":
+        send_json(conn, {"type": "waiting_for_players"})
 
     send_json(conn, {
         "type": "game_state",
@@ -108,42 +120,32 @@ def handle_connection(manager, conn):
 
     while True:
         try:
-            chunk = conn.recv(1024).decode()
 
-            if not chunk:
+            data, buffer = receive_json(conn, buffer)
+
+            if data is None:
                 break
 
-            buffer += chunk
+            # Player making selection
+            if data["type"] == "validate_partial":
 
-            while "\n" in buffer:
+                path = [tuple(coord) for coord in data["path"]]
 
-                line, buffer = buffer.split("\n", 1)
+                response = session.validate_partial_selection(player, path)
 
-                if not line:
-                    continue
+                send_json(conn, response)
 
-                data = json.loads(line)
+                continue
 
-                # Player making selection
-                if data["type"] == "validate_partial":
+            # Player submitting move
+            if data["type"] == "move":
 
-                    path = [tuple(coord) for coord in data["path"]]
+                path = [tuple(coord) for coord in data["path"]]
 
-                    response = session.validate_partial_selection(player, path)
+                result = session.handle_move(player, path)
 
-                    send_json(conn, response)
-
-                    continue
-
-                # Player submitting move
-                if data["type"] == "move":
-
-                    path = [tuple(coord) for coord in data["path"]]
-
-                    result = session.handle_move(player, path)
-
-                    if not result["success"]:
-                        send_json(conn, result["response"])
+                if not result["success"]:
+                    send_json(conn, result["response"])
 
         except Exception as e:
             # print("Error:", e)
@@ -163,6 +165,13 @@ def start_server():
     server.bind((HOST, PORT))
     server.listen()
 
+    cleanup_thread = threading.Thread(
+        target=cleanup_loop,
+        daemon=True
+    )
+
+    cleanup_thread.start()
+
     print("Waiting for players...")
 
     while True:
@@ -177,6 +186,14 @@ def start_server():
         )
 
         thread.start()
+
+def cleanup_loop():
+
+    while True:
+
+        manager.cleanup_sessions()
+
+        time.sleep(10)
 
 if __name__ == "__main__":
     start_server()

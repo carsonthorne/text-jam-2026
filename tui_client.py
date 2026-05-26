@@ -2,25 +2,21 @@ from textual.app import App, ComposeResult
 from textual.widgets import Static, RichLog
 from textual.containers import Horizontal
 from textual.events import Key
+
 import socket
 import threading
 import json
 import sys
-from local_identity import load_identity, save_identity
 
+from local_identity import load_identity, save_identity
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
 from local_identity import load_identity
+from network import send_json, receive_json
 
 HOST = "127.0.0.1"
 PORT = 5555
-
-def send_json(client, data):
-
-    message = json.dumps(data) + "\n"
-
-    client.send(message.encode())
 
 class ChineseCheckersApp(App):
 
@@ -96,90 +92,100 @@ class ChineseCheckersApp(App):
 
             try:
 
-                chunk = self.client.recv(1024).decode()
+                data, buffer = receive_json(self.client, buffer)
 
-                if not chunk:
+                if data is None:
                     break
 
-                buffer += chunk
+                msg_type = data["type"]
 
-                while "\n" in buffer:
+                if msg_type == "welcome":
 
-                    line, buffer = buffer.split("\n", 1)
+                    self.player_number = data["player_number"]
+                    self.player_configs = data["players"]
+                    self.identity["session_id"] = data["session_id"]
 
-                    if not line:
-                        continue
+                    save_identity(self.identity)
 
-                    data = json.loads(line)
+                    player_config = next(
+                        config
+                        for config in self.player_configs
+                        if config["player"] == self.player_number
+                    )
 
-                    msg_type = data["type"]
+                    start_zone = player_config["start"]
 
-                    if msg_type == "welcome":
+                    self.cursor = ZONE_CURSOR_STARTS[start_zone]
 
-                        self.player_number = data["player_number"]
-                        self.player_configs = data["players"]
-                        self.identity["session_id"] = data["session_id"]
+                    self.call_from_thread(
+                        self.log_message,
+                        f"[bold green]You are player {self.player_number}[/]"
+                    )
 
-                        save_identity(self.identity)
+                elif msg_type == "waiting_for_players":
 
-                        player_config = next(
-                            config
-                            for config in self.player_configs
-                            if config["player"] == self.player_number
-                        )
+                    self.call_from_thread(
+                        self.log_message,
+                        "[yellow]Waiting for more players...[/]"
+                    )
 
-                        start_zone = player_config["start"]
+                elif msg_type == "reconnected":
 
-                        self.cursor = ZONE_CURSOR_STARTS[start_zone]
+                    self.call_from_thread(
+                        self.log_message,
+                        "[green]Reconnected to game.[/]"
+                    )
 
-                        self.call_from_thread(
-                            self.log_message,
-                            f"[bold green]You are player {self.player_number}[/]"
-                        )
+                elif msg_type == "game_started":
 
-                    elif msg_type == "partial_validation":
+                    self.call_from_thread(
+                        self.log_message,
+                        "[bold green]Game started![/]"
+                    )
 
-                        valid = data["valid"]
-                        message = data["message"]
+                elif msg_type == "partial_validation":
 
-                        self.call_from_thread(
-                            self.handle_partial_validation,
-                            valid,
-                            message,
-                            self.cursor
-                        )
+                    valid = data["valid"]
+                    message = data["message"]
 
-                    elif msg_type == "game_state":
+                    self.call_from_thread(
+                        self.handle_partial_validation,
+                        valid,
+                        message,
+                        self.cursor
+                    )
 
-                        serialized_board = data["board"]
+                elif msg_type == "game_state":
 
-                        new_board = {}
+                    serialized_board = data["board"]
 
-                        for key, value in serialized_board.items():
+                    new_board = {}
 
-                            q, r = map(int, key.split(","))
+                    for key, value in serialized_board.items():
 
-                            new_board[(q, r)] = value
+                        q, r = map(int, key.split(","))
 
-                        current_player = data["current_player"]
+                        new_board[(q, r)] = value
 
-                        winner = data.get("winner")
-                        
-                        # update UI safely
-                        self.call_from_thread(
-                            self.update_game_state,
-                            new_board,
-                            current_player,
-                            winner
-                        )
+                    current_player = data["current_player"]
 
-                    elif msg_type == "error":
+                    winner = data.get("winner")
+                    
+                    # update UI safely
+                    self.call_from_thread(
+                        self.update_game_state,
+                        new_board,
+                        current_player,
+                        winner
+                    )
 
-                        message = data["message"]
-                        self.call_from_thread(
-                            self.show_error,
-                            message
-                        )
+                elif msg_type == "error":
+
+                    message = data["message"]
+                    self.call_from_thread(
+                        self.show_error,
+                        message
+                    )
 
             except Exception as e:
 

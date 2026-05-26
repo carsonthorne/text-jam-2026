@@ -23,3 +23,19 @@ class SessionManager:
     def get_session(self, session_id):
 
         return self.sessions.get(session_id)
+    
+    def cleanup_sessions(self):
+
+        abandoned = []
+
+        for session_id, session in self.sessions.items():
+
+            if session.is_abandoned():
+
+                abandoned.append(session_id)
+
+        for session_id in abandoned:
+
+            print(f"Cleaning up session {session_id}")
+
+            del self.sessions[session_id]

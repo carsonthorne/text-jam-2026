@@ -1,7 +1,10 @@
 import threading
+import time
 from game_state import GameState
 from network import send_json
 from move_validator import validate_partial_move, validate_move
+
+RECONNECT_TIMEOUT = 60      # Clean up session after one minute.
 
 class Session:
 
@@ -16,6 +19,9 @@ class Session:
         self.lock = threading.Lock()
 
         self.state = "lobby"
+
+        self.created_at = time.time()
+        self.last_activity = time.time()
 
     def broadcast_game_state(self):
 
@@ -34,18 +40,31 @@ class Session:
 
     def add_player(self, player):
         
+        self.touch()
+
         if len(self.players) >= self.num_players:
             return False
         
         self.players[player.player_id] = player
 
         return True
+    
+    def touch(self):
+
+        self.last_activity = time.time()
 
     def can_start(self):
         return len(self.players) == self.num_players
 
     def start_game(self):
         self.state = "in_progress"
+
+        for player in self.players.values():
+
+            if player.connected:
+
+                send_json(player.connection, {"type": "game_started"})
+
         self.broadcast_game_state()
 
     def assign_player_number(self):
@@ -124,6 +143,8 @@ class Session:
                 path[-1]
             )
 
+        self.touch()
+
         self.broadcast_game_state()
 
         return {"success": True}
@@ -136,3 +157,24 @@ class Session:
             f"Player {player.player_number} disconnected "
             f"from session {self.session_id}"
         )
+
+    def has_disconnected_players(self):
+
+        return any(
+            not player.connected
+            for player in self.players.values()
+        )
+    
+    def is_abandoned(self):
+
+        now = time.time()
+
+        for player in self.players.values():
+
+            if player.connected:
+                return False
+            
+            if now - player.last_seen < RECONNECT_TIMEOUT:
+                return False
+            
+        return True
