@@ -6,7 +6,7 @@ import socket
 import threading
 import json
 import sys
-from local_identity import load_identity
+from local_identity import load_identity, save_identity
 
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
@@ -35,6 +35,7 @@ class ChineseCheckersApp(App):
         send_json(self.client, {
             "type": "connect",
             "player_id": self.identity["player_id"],
+            "session_id": self.identity["session_id"],
             "name": self.identity["name"]
         })
 
@@ -117,6 +118,9 @@ class ChineseCheckersApp(App):
 
                         self.player_number = data["player_number"]
                         self.player_configs = data["players"]
+                        self.identity["session_id"] = data["session_id"]
+
+                        save_identity(self.identity)
 
                         player_config = next(
                             config

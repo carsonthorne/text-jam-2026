@@ -2,11 +2,13 @@ import time
 
 class Player:
 
-    def __init__(self, player_id, player_number, name="Unknown"):
+    def __init__(self, player_id, player_number, name, session_id):
         
         self.player_id = player_id
-        self.name = name
         self.player_number = player_number
+        self.name = name
+        self.session_id = session_id
+
         self.connection = None
 
         self.connected = False

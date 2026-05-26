@@ -12,9 +12,14 @@ def load_identity(force_new=False):
         with open(IDENTIFY_FILE, "r") as f:
             return json.load(f)
     
+    session_id = input(
+        "Enter session ID (blank to create new session): "
+    ).strip()
+
     # Assign a universally unique id
     identity = {
         "player_id": str(uuid.uuid4()),
+        "session_id": session_id or None,
         "name": input("Enter your name: ")
     }
 
@@ -22,3 +27,8 @@ def load_identity(force_new=False):
         json.dump(identity, f)
 
     return identity
+
+def save_identity(identity):
+
+    with open(IDENTIFY_FILE, "w") as f:
+        json.dump(identity, f)
