@@ -4,14 +4,9 @@ from textual.widgets import Static, RichLog
 from textual.containers import Horizontal
 from textual.events import Key
 
-import socket
-import threading
-import traceback
-
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
-from network import send_json, receive_json
 from local_identity import save_identity
 
 
@@ -36,6 +31,8 @@ class GameScreen(Screen):
 
         self.cursor = None
         self.tick = 0
+
+        self.client.on_message = self.handle_message
 
 
     def compose(self) -> ComposeResult:
@@ -63,12 +60,6 @@ class GameScreen(Screen):
 
         self.set_interval(0.08, self.animate_cursor)
 
-        receive_thread = threading.Thread(
-            target=self.receive_messages,
-            daemon=True
-        )
-
-        receive_thread.start()
 
 
     def animate_cursor(self):
@@ -77,118 +68,92 @@ class GameScreen(Screen):
 
         self.refresh_board()
 
+    def handle_message(self, data):
 
-    def receive_messages(self):
+        msg_type = data["type"]
 
-        buffer = ""
+        if msg_type == "welcome":
 
-        while True:
+            self.player_number = data["player_number"]
+            self.player_configs = data["players"]
+            self.identity["session_id"] = data["session_id"]
 
-            try:
+            save_identity(self.identity)
 
-                data, buffer = receive_json(self.client, buffer)
+            player_config = next(
+                config
+                for config in self.player_configs
+                if config["player"] == self.player_number
+            )
 
-                if data is None:
-                    break
+            start_zone = player_config["start"]
+            self.cursor = ZONE_CURSOR_STARTS[start_zone]
 
-                msg_type = data["type"]
+            self.call_from_thread(
+                self.log_message,
+                f"[bold green]You are player {self.player_number}[/]"
+            )
 
-                if msg_type == "welcome":
+            self.call_from_thread(self.refresh_board)
 
-                    self.player_number = data["player_number"]
-                    self.player_configs = data["players"]
-                    self.identity["session_id"] = data["session_id"]
 
-                    save_identity(self.identity)
+        elif msg_type == "waiting_for_players":
 
-                    player_config = next(
-                        config
-                        for config in self.player_configs
-                        if config["player"] == self.player_number
-                    )
+            self.call_from_thread(
+                self.log_message,
+                "[yellow]Waiting for more players...[/]"
+            )
 
-                    start_zone = player_config["start"]
 
-                    self.cursor = ZONE_CURSOR_STARTS[start_zone]
+        elif msg_type == "reconnected":
 
-                    self.call_from_thread(
-                        self.log_message,
-                        f"[bold green]You are player {self.player_number}[/]"
-                    )
-                    
-                    self.call_from_thread(self.refresh_board)
+            self.call_from_thread(
+                self.log_message,
+                "[green]Reconnected to game.[/]"
+            )
 
-                elif msg_type == "waiting_for_players":
 
-                    self.call_from_thread(
-                        self.log_message,
-                        "[yellow]Waiting for more players...[/]"
-                    )
+        elif msg_type == "game_started":
 
-                elif msg_type == "reconnected":
+            self.call_from_thread(
+                self.log_message,
+                "[bold green]Game started![/]"
+            )
 
-                    self.call_from_thread(
-                        self.log_message,
-                        "[green]Reconnected to game.[/]"
-                    )
 
-                elif msg_type == "game_started":
+        elif msg_type == "partial_validation":
 
-                    self.call_from_thread(
-                        self.log_message,
-                        "[bold green]Game started![/]"
-                    )
+            self.call_from_thread(
+                self.handle_partial_validation,
+                data["valid"],
+                data["message"],
+                self.cursor
+            )
 
-                elif msg_type == "partial_validation":
 
-                    valid = data["valid"]
-                    message = data["message"]
+        elif msg_type == "game_state":
 
-                    self.call_from_thread(
-                        self.handle_partial_validation,
-                        valid,
-                        message,
-                        self.cursor
-                    )
+            serialized_board = data["board"]
 
-                elif msg_type == "game_state":
+            new_board = {}
+            for key, value in serialized_board.items():
+                q, r = map(int, key.split(","))
+                new_board[(q, r)] = value
 
-                    serialized_board = data["board"]
+            self.call_from_thread(
+                self.update_game_state,
+                new_board,
+                data["current_player"],
+                data.get("winner")
+            )
 
-                    new_board = {}
 
-                    for key, value in serialized_board.items():
+        elif msg_type == "error":
 
-                        q, r = map(int, key.split(","))
-
-                        new_board[(q, r)] = value
-
-                    current_player = data["current_player"]
-
-                    winner = data.get("winner")
-                    
-                    # update UI safely
-                    self.call_from_thread(
-                        self.update_game_state,
-                        new_board,
-                        current_player,
-                        winner
-                    )
-
-                elif msg_type == "error":
-
-                    message = data["message"]
-                    self.call_from_thread(
-                        self.show_error,
-                        message
-                    )
-
-            except Exception as e:
-
-                err = traceback.format_exc()
-                print(err)
-                self.call_from_thread(self.log_message, f"[red]{err}[/]")
-                break
+            self.call_from_thread(
+                self.show_error,
+                data["message"]
+            )
 
     
     def update_game_state(self, new_board, current_player, winner):
@@ -250,9 +215,6 @@ class GameScreen(Screen):
 
     def refresh_board(self):
 
-        # if not self.board:
-        #     return
-        
         visible_cursor = (
             self.cursor if self.my_turn else None
         )
@@ -338,7 +300,7 @@ class GameScreen(Screen):
 
             proposed_path = self.selected_path + [self.cursor]
 
-            send_json(self.client, {
+            self.client.send({
                 "type": "validate_partial",
                 "path": proposed_path
             })
@@ -372,7 +334,7 @@ class GameScreen(Screen):
 
     def send_move(self):
 
-        send_json(self.client, {
+        self.client.send({
             "type": "move",
             "path": self.selected_path
         })

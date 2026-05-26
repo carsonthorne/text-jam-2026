@@ -1,12 +1,10 @@
 import socket
 import threading
-import json
 import traceback
 import time
 
 from player import Player
 from session_manager import SessionManager
-from session import Session
 from network import send_json, receive_json
 
 HOST = "127.0.0.1"

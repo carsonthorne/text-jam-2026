@@ -3,16 +3,15 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Static
 from textual.containers import Vertical
 
-import socket
-
-from local_identity import load_identity
-from network import send_json
 from screens.game_screen import GameScreen
 
 HOST = "127.0.0.1"
 PORT = 5555
 
 class MainMenuScreen(Screen):
+
+    def __init__(self):
+        super().__init__()
 
     def compose(self) -> ComposeResult:
 
@@ -24,6 +23,13 @@ class MainMenuScreen(Screen):
             Button("Controls", id="controls"),
             Button("Quit", id="quit")
         )
+
+    def on_mount(self):
+        self.app.client.on_message = self.handle_message
+
+    def handle_message(self, data):
+        if data["type"] == "error":
+            print(data["message"])
 
     def on_button_pressed(self, event: Button.Pressed):
 
@@ -37,12 +43,8 @@ class MainMenuScreen(Screen):
 
             if button_id == "create":
 
-                client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                # client.settimeout(5)
-                client.settimeout(None)
-                client.connect((HOST, PORT))
-
-                # identity = load_identity(force_new=True)
+                client = self.app.client
+                client.connect(HOST, PORT)
 
                 identity = {
                     "player_id": "test-player",
@@ -50,13 +52,11 @@ class MainMenuScreen(Screen):
                     "name": "Carson"
                 }
 
-                send_json(client, {
+                client.send({
                     "type": "connect",
                     "player_id": identity["player_id"],
                     "session_id": None,
                     "name": identity["name"]
                 })
 
-                self.app.push_screen(
-                    GameScreen(client, identity)
-                )
+                self.app.push_screen(GameScreen(self.app.client, identity))
