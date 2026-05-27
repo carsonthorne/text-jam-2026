@@ -63,6 +63,7 @@ class GameClient:
 
             except Exception as e:
                 print("Client receive error:", e)
+                self.send({"type": "debug", "message": f"exception inside game_client {e}"})
                 break
 
         self.running = False

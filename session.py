@@ -58,16 +58,6 @@ class Session:
     def can_start(self):
         return len(self.players) == self.num_players
 
-    def start_game(self):
-        self.state = "in_progress"
-
-        for player in self.players.values():
-
-            if player.connected:
-
-                send_json(player.connection, {"type": "game_started"})
-
-        self.broadcast_game_state()
 
     def assign_player_number(self):
 
@@ -189,7 +179,8 @@ class Session:
             {
                 "name": player.name,
                 "player_number": player.player_number,
-                "connected": player.connected
+                "connected": player.connected,
+                "is_host": player.player_number == 1
             }
             for player in self.players.values()
         ]
@@ -210,3 +201,18 @@ class Session:
 
                 # self.app.client.send(player.connection, message)
                 send_json(player.connection, message)
+
+
+    def start_game(self):
+        self.state = "in_progress"
+
+
+        for player in self.players.values():
+            
+            # send_json(player.connection, {"type": "debug", "message": player.name})
+
+            if player.connected:
+
+                send_json(player.connection, {"type": "game_started"})
+
+        # self.broadcast_game_state()

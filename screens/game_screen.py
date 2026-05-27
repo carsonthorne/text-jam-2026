@@ -58,6 +58,10 @@ class GameScreen(Screen):
 
         self.refresh_board()
 
+        # self.client.send({
+        #     "type": "request_game_state"
+        # })
+
         self.set_interval(0.08, self.animate_cursor)
 
         player_config = next(
@@ -100,10 +104,20 @@ class GameScreen(Screen):
 
         elif msg_type == "game_started":
 
-            self.call_from_thread(
-                self.log_message,
-                "[bold green]Game started![/]"
+            self.app.push_screen(
+                GameScreen(
+                    self.client,
+                    self.identity,
+                    self.player_number,
+                    self.player_configs
+                )
             )
+
+
+            # self.call_from_thread(
+            #     self.log_message,
+            #     "[bold green]Game started![/]"
+            # )
 
 
         elif msg_type == "partial_validation":

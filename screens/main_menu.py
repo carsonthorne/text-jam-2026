@@ -21,7 +21,13 @@ class MainMenuScreen(Screen):
 
         yield Vertical(
             Static("[bold cyan]Chinese Checkers[/]"),
-            Button("Create Session", id="create"),
+            # Button("Create Session", id="create"),
+
+            Button("Create 2 Player Session", id="create_2"),
+            Button("Create 3 Player Session", id="create_3"),
+            Button("Create 4 Player Session", id="create_4"),
+            Button("Create 6 Player Session", id="create_6"),
+
             Button("Join Session", id="join"),
             Button("Rules", id="rules"),
             Button("Controls", id="controls"),
@@ -51,7 +57,9 @@ class MainMenuScreen(Screen):
 
             self.app.exit()
 
-        elif button_id == "create":
+        elif button_id == "create_2":
+
+            num_players = 2
 
             client = self.app.client
             identity = client.identity
@@ -68,7 +76,77 @@ class MainMenuScreen(Screen):
                 "type": "connect",
                 "player_id": identity["player_id"],
                 "session_id": None,
-                "name": identity["name"]
+                "name": identity["name"],
+                "num_players": num_players
+            })
+
+        elif button_id == "create_3":
+
+            num_players = 3
+
+            client = self.app.client
+            identity = client.identity
+
+            if not identity:
+                self.app.push_screen(IdentityScreen())
+                return
+
+            client.connect(HOST, PORT)
+
+            self.app.push_screen(LobbyScreen(client, identity))
+
+            client.send({
+                "type": "connect",
+                "player_id": identity["player_id"],
+                "session_id": None,
+                "name": identity["name"],
+                "num_players": num_players
+            })
+
+        elif button_id == "create_4":
+
+            num_players = 4
+
+            client = self.app.client
+            identity = client.identity
+
+            if not identity:
+                self.app.push_screen(IdentityScreen())
+                return
+
+            client.connect(HOST, PORT)
+
+            self.app.push_screen(LobbyScreen(client, identity))
+
+            client.send({
+                "type": "connect",
+                "player_id": identity["player_id"],
+                "session_id": None,
+                "name": identity["name"],
+                "num_players": num_players
+            })
+
+        elif button_id == "create_6":
+
+            num_players = 6
+
+            client = self.app.client
+            identity = client.identity
+
+            if not identity:
+                self.app.push_screen(IdentityScreen())
+                return
+
+            client.connect(HOST, PORT)
+
+            self.app.push_screen(LobbyScreen(client, identity))
+
+            client.send({
+                "type": "connect",
+                "player_id": identity["player_id"],
+                "session_id": None,
+                "name": identity["name"],
+                "num_players": num_players
             })
         
         elif button_id == "join":
