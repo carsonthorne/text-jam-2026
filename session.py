@@ -47,6 +47,8 @@ class Session:
         
         self.players[player.player_id] = player
 
+        self.broadcast_lobby_state()
+
         return True
     
     def touch(self):
@@ -153,6 +155,8 @@ class Session:
 
         player.disconnect()
 
+        self.broadcast_lobby_state()
+
         print(
             f"Player {player.player_number} disconnected "
             f"from session {self.session_id}"
@@ -178,3 +182,31 @@ class Session:
                 return False
             
         return True
+    
+    def serialize_players(self):
+
+        return [
+            {
+                "name": player.name,
+                "player_number": player.player_number,
+                "connected": player.connected
+            }
+            for player in self.players.values()
+        ]
+
+
+    def broadcast_lobby_state(self):
+
+        message = {
+            "type": "lobby_state",
+            "players": self.serialize_players(),
+            "session_id": self.session_id,
+            "num_players": self.num_players
+        }
+
+        for player in self.players.values():
+
+            if player.connected and player.connection:
+
+                # self.app.client.send(player.connection, message)
+                send_json(player.connection, message)

@@ -4,6 +4,7 @@ from textual.widgets import Static
 from textual.containers import Vertical
 
 from local_identity import save_identity
+from network import send_json
 
 class LobbyScreen(Screen):
 
@@ -15,6 +16,8 @@ class LobbyScreen(Screen):
         self.identity = identity
 
         self.session_id = None
+        self.players = []
+        self.num_players = None
 
         self.client.on_message = self.handle_message
 
@@ -39,8 +42,27 @@ class LobbyScreen(Screen):
         self.title_widget.update(
             f"[bold cyan]Lobby[/]\nSession ID: {self.session_id}"
         )
+        # self.players_widget.update(
+        #     f"Player name: {self.identity["name"]}"
+        # )
+
+        player_lines = []
+
+        for player in self.players:
+
+            status = (
+                "[green](connected)[/]"
+                if player["connected"]
+                else "[red](disconnected)[/]"
+            )
+
+            player_lines.append(
+                f"Player {player['player_number']}: "
+                f"{player['name']} {status}"
+            )
+
         self.players_widget.update(
-            f"Player name: {self.identity["name"]}"
+            "\n".join(player_lines)
         )
 
     def handle_message(self, data):
@@ -57,9 +79,6 @@ class LobbyScreen(Screen):
 
             self.player_number = data["player_number"]
             self.player_configs = data["players"]
-
-
-
 
             self.refresh_lobby()
 
@@ -81,3 +100,13 @@ class LobbyScreen(Screen):
                     self.player_configs
                 )
             )
+
+        elif msg_type == "lobby_state":
+
+            self.session_id = data["session_id"]
+
+            self.players = data["players"]
+
+            self.num_players["num_players"]
+
+            self.refresh_lobby()
