@@ -11,18 +11,20 @@ class GameClient:
 
         self.buffer = ""
 
-        # connection/session state
-        self.player_id = None
-        self.session_id = None
-        self.name = None
 
         # callback hooks (screens will attach these)
         self.on_message = None
+
+        self.identity = None
 
     # -----------
     # CONNECTION
     # -----------
     def connect(self, host, port):
+
+        if self.socket:
+            self.close()
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((host, port))
 

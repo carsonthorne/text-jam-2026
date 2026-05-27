@@ -4,6 +4,10 @@ from textual.widgets import Button, Static
 from textual.containers import Vertical
 
 from screens.game_screen import GameScreen
+from screens.lobby_screen import LobbyScreen
+from screens.identity_screen import IdentityScreen
+from screens.join_session_screen import JoinSessionScreen
+from local_identity import load_identity, clear_identity
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -21,11 +25,19 @@ class MainMenuScreen(Screen):
             Button("Join Session", id="join"),
             Button("Rules", id="rules"),
             Button("Controls", id="controls"),
+            Button("Switch Player", id="switch_player"),
             Button("Quit", id="quit")
         )
 
     def on_mount(self):
         self.app.client.on_message = self.handle_message
+
+        identity = load_identity()
+
+        if identity:
+            self.app.client.identity = identity
+        else:
+            self.app.push_screen(IdentityScreen())
 
     def handle_message(self, data):
         if data["type"] == "error":
@@ -39,24 +51,40 @@ class MainMenuScreen(Screen):
 
             self.app.exit()
 
-        else:
+        elif button_id == "create":
 
-            if button_id == "create":
+            client = self.app.client
+            identity = client.identity
 
-                client = self.app.client
-                client.connect(HOST, PORT)
+            if not identity:
+                self.app.push_screen(IdentityScreen())
+                return
 
-                identity = {
-                    "player_id": "test-player",
-                    "session_id": None,
-                    "name": "Carson"
-                }
+            client.connect(HOST, PORT)
 
-                client.send({
-                    "type": "connect",
-                    "player_id": identity["player_id"],
-                    "session_id": None,
-                    "name": identity["name"]
-                })
+            self.app.push_screen(LobbyScreen(client, identity))
 
-                self.app.push_screen(GameScreen(self.app.client, identity))
+            client.send({
+                "type": "connect",
+                "player_id": identity["player_id"],
+                "session_id": None,
+                "name": identity["name"]
+            })
+        
+        elif button_id == "join":
+
+            identity = self.app.client.identity
+
+            if not identity:
+                self.app.push_screen(IdentityScreen())
+                return
+
+            self.app.push_screen(JoinSessionScreen())
+
+        elif button_id == "switch_player":
+
+            clear_identity()
+
+            self.app.client.identity = None
+
+            self.app.push_screen(IdentityScreen())

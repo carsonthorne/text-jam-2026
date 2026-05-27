@@ -12,7 +12,7 @@ from local_identity import save_identity
 
 class GameScreen(Screen):
 
-    def __init__(self, client, identity):
+    def __init__(self, client, identity, player_number, player_configs):
         
         super().__init__()
 
@@ -23,8 +23,8 @@ class GameScreen(Screen):
 
         self.board = {}
 
-        self.player_configs = []
-        self.player_number = None
+        self.player_number = player_number
+        self.player_configs = player_configs
 
         self.my_turn = False
         self.selected_path = []
@@ -60,6 +60,15 @@ class GameScreen(Screen):
 
         self.set_interval(0.08, self.animate_cursor)
 
+        player_config = next(
+            config
+            for config in self.player_configs
+            if config["player"] == self.player_number
+        )
+
+        start_zone = player_config["start"]
+
+        self.cursor = ZONE_CURSOR_STARTS[start_zone]
 
 
     def animate_cursor(self):
@@ -68,36 +77,12 @@ class GameScreen(Screen):
 
         self.refresh_board()
 
+
     def handle_message(self, data):
 
         msg_type = data["type"]
 
-        if msg_type == "welcome":
-
-            self.player_number = data["player_number"]
-            self.player_configs = data["players"]
-            self.identity["session_id"] = data["session_id"]
-
-            save_identity(self.identity)
-
-            player_config = next(
-                config
-                for config in self.player_configs
-                if config["player"] == self.player_number
-            )
-
-            start_zone = player_config["start"]
-            self.cursor = ZONE_CURSOR_STARTS[start_zone]
-
-            self.call_from_thread(
-                self.log_message,
-                f"[bold green]You are player {self.player_number}[/]"
-            )
-
-            self.call_from_thread(self.refresh_board)
-
-
-        elif msg_type == "waiting_for_players":
+        if msg_type == "waiting_for_players":
 
             self.call_from_thread(
                 self.log_message,
