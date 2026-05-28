@@ -21,8 +21,8 @@ class MainMenuScreen(Screen):
 
         yield Vertical(
             Static("[bold cyan]Chinese Checkers[/]"),
-            # Button("Create Session", id="create"),
 
+            # TODO change to dropdown menu instead of multiple buttons
             Button("Create 2 Player Session", id="create_2"),
             Button("Create 3 Player Session", id="create_3"),
             Button("Create 4 Player Session", id="create_4"),

@@ -93,7 +93,6 @@ def handle_connection(manager, conn):
         player.attach_connection(conn)
 
         session.add_player(player)
-        # session.broadcast_lobby_state()
 
     send_json(conn, {
         "type": "welcome",
@@ -112,14 +111,10 @@ def handle_connection(manager, conn):
         "winner": session.game_state.winner,
     })
 
-    # if len(session.players) == session.num_players and all(p.connected for p in session.players.values()):
-
-    #     print("Game starting!")
-
-    #     session.start_game()
-
     buffer = ""
 
+
+    # Receive message loop
     while True:
         try:
 
@@ -171,27 +166,13 @@ def handle_connection(manager, conn):
                     })
 
                     continue
-                # print("should start game", session.serialize_players())
-                # print("SENDING GAME STARTED TO:", player.player_number)
-                print("can start game: ", session.can_start())
-                
+
                 session.start_game()
 
                 continue
 
             elif data["type"] == "debug":
                 print("DEBUG: ", data["message"])
-
-            elif data["type"] == "request_game_state":
-
-                send_json(conn, {
-                    "type": "game_state",
-                    "board": session.game_state.serialize_board(),
-                    "current_player": session.game_state.current_player_number,
-                    "winner": session.game_state.winner,
-                })
-
-                continue
 
         except Exception as e:
             # print("Error:", e)
@@ -203,6 +184,7 @@ def handle_connection(manager, conn):
     conn.close()
 
     print(f"Player {player.player_number} disconnected")
+
 
 def start_server():
 
@@ -232,6 +214,7 @@ def start_server():
         )
 
         thread.start()
+
 
 def cleanup_loop():
 

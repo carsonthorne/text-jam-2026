@@ -19,6 +19,7 @@ class JoinSessionScreen(Screen):
             Button("Join Session", id="join_session")
         )
 
+
     def on_button_pressed(self, event: Button.Pressed):
 
         if event.button.id != "join_session":

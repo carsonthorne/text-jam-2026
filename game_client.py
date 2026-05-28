@@ -11,7 +11,6 @@ class GameClient:
 
         self.buffer = ""
 
-
         # callback hooks (screens will attach these)
         self.on_message = None
 
@@ -63,7 +62,7 @@ class GameClient:
 
             except Exception as e:
                 print("Client receive error:", e)
-                self.send({"type": "debug", "message": f"exception inside game_client {e}"})
+                self.send({"type": "debug", "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
                 break
 
         self.running = False

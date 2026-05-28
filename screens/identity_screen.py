@@ -9,7 +9,6 @@ from local_identity import save_identity
 
 class IdentityScreen(Screen):
 
-
     def compose(self) -> ComposeResult:
 
         yield Vertical(
@@ -18,9 +17,9 @@ class IdentityScreen(Screen):
             Button("Continue", id="continue")
         )
 
+
     def on_button_pressed(self, event: Button.Pressed):
 
-        
         if event.button.id != "continue":
             return
         
@@ -42,4 +41,3 @@ class IdentityScreen(Screen):
         self.app.client.identity = identity
 
         self.app.pop_screen()
-

@@ -209,10 +209,8 @@ class Session:
 
         for player in self.players.values():
             
-            # send_json(player.connection, {"type": "debug", "message": player.name})
-
             if player.connected:
 
                 send_json(player.connection, {"type": "game_started"})
 
-        # self.broadcast_game_state()
+        self.broadcast_game_state()

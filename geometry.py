@@ -13,6 +13,7 @@ def add_coords(a, b):
     
         return (a[0] + b[0], a[1] + b[1])
 
+
 def get_zone_for_coord(coord):
     
     for zone_name, coords in HOME_ZONES.items():
@@ -21,6 +22,7 @@ def get_zone_for_coord(coord):
             return zone_name
         
     return None
+
 
 def is_adjacent_move(move_from, move_to):
 
@@ -32,6 +34,7 @@ def is_adjacent_move(move_from, move_to):
             return True
     
     return False
+
 
 def is_jump_move(board, move_from, move_to):
 

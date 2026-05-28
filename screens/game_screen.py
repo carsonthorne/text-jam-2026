@@ -7,7 +7,6 @@ from textual.events import Key
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
-from local_identity import save_identity
 
 
 class GameScreen(Screen):
@@ -58,10 +57,6 @@ class GameScreen(Screen):
 
         self.refresh_board()
 
-        # self.client.send({
-        #     "type": "request_game_state"
-        # })
-
         self.set_interval(0.08, self.animate_cursor)
 
         player_config = next(
@@ -88,47 +83,26 @@ class GameScreen(Screen):
 
         if msg_type == "waiting_for_players":
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.log_message,
                 "[yellow]Waiting for more players...[/]"
             )
 
-
         elif msg_type == "reconnected":
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.log_message,
                 "[green]Reconnected to game.[/]"
             )
 
-
-        elif msg_type == "game_started":
-
-            self.app.push_screen(
-                GameScreen(
-                    self.client,
-                    self.identity,
-                    self.player_number,
-                    self.player_configs
-                )
-            )
-
-
-            # self.call_from_thread(
-            #     self.log_message,
-            #     "[bold green]Game started![/]"
-            # )
-
-
         elif msg_type == "partial_validation":
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.handle_partial_validation,
                 data["valid"],
                 data["message"],
                 self.cursor
             )
-
 
         elif msg_type == "game_state":
 
@@ -139,17 +113,16 @@ class GameScreen(Screen):
                 q, r = map(int, key.split(","))
                 new_board[(q, r)] = value
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.update_game_state,
                 new_board,
                 data["current_player"],
                 data.get("winner")
             )
 
-
         elif msg_type == "error":
 
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.show_error,
                 data["message"]
             )
@@ -275,7 +248,6 @@ class GameScreen(Screen):
 
         key = event.key.lower()
 
-        # if key in DIRECTION_KEYS:
         if key in DIRECTIONS:
 
             direction = DIRECTIONS[key]

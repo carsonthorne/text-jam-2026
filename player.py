@@ -15,12 +15,14 @@ class Player:
 
         self.last_seen = time.time()
 
+
     def attach_connection(self, conn):
 
         self.connection = conn
         self.connected = True
 
         self.last_seen = time.time()
+
 
     def disconnect(self):
 

@@ -6,6 +6,7 @@ def send_json(conn, data):
 
     conn.send(message.encode())
 
+
 def receive_json(conn, buffer):
     
     while "\n" not in buffer:

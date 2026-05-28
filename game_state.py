@@ -13,17 +13,21 @@ class GameState:
 
         self.winner = None
 
+
     @property
     def current_player(self):
         return self.players[self.current_player_index]
     
+
     @property
     def current_player_number(self):
         return self.current_player["player"]
     
+
     def is_players_turn(self, player_number):
         return player_number == self.current_player_number
-            
+
+
     def apply_move(self, move_from, move_to):
 
         player_number = self.board[move_from]
@@ -42,11 +46,13 @@ class GameState:
         # Next turn
         self.next_turn()
 
+
     def next_turn(self):
 
         self.current_player_index = (
             self.current_player_index + 1
         ) % len(self.players)
+
 
     def serialize_board(self):
 
