@@ -16,9 +16,7 @@ class GameClient:
 
         self.identity = None
 
-    # -----------
-    # CONNECTION
-    # -----------
+
     def connect(self, host, port):
 
         if self.socket:
@@ -37,17 +35,17 @@ class GameClient:
         )
         self.receive_thread.start()
 
+
     def send(self, data):
         send_json(self.socket, data)
+
 
     def close(self):
         self.running = False
         if self.socket:
             self.socket.close()
 
-    # -------------
-    # RECEIVE LOOP
-    # -------------
+
     def _receive_loop(self):
         while self.running:
             try:

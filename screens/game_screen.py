@@ -60,10 +60,17 @@ class GameScreen(Screen):
         self.set_interval(0.08, self.animate_cursor)
 
         player_config = next(
-            config
-            for config in self.player_configs
-            if config["player"] == self.player_number
+            (
+                config
+                    for config in self.player_configs
+                    if config["player"] == self.player_number
+            ),
+            None
         )
+
+        if player_config is None:
+            self.log_message("[red]Failed to load player config[/]")
+            return
 
         start_zone = player_config["start"]
 

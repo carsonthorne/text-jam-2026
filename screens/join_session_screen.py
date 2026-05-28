@@ -10,7 +10,6 @@ PORT = 5555
 
 class JoinSessionScreen(Screen):
 
-
     def compose(self) -> ComposeResult:
 
         yield Vertical(
