@@ -6,12 +6,10 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
+from messages import make_welcome, make_error, make_game_state
 from message_types import (
     CONNECT,
-    WELCOME,
     WAITING_FOR_PLAYERS,
-    GAME_STATE,
-    ERROR,
     RECONNECTED,
     DEBUG
 )
@@ -46,10 +44,7 @@ def handle_connection(manager, conn):
 
         if session is None:
 
-            send_json(conn, {
-                "type": ERROR,
-                "message": "Session not found."
-            })
+            send_json(conn, make_error("Session not found."))
 
             conn.close()
             return
@@ -83,19 +78,13 @@ def handle_connection(manager, conn):
     # New players
     else:
         if len(session.players) >= session.num_players:
-            send_json(conn, {
-                "type": ERROR,
-                "message": "Session is full."
-            })
+            send_json(conn, make_error("Session is full."))
             conn.close()
             return
 
         player_number = session.assign_player_number()
         if player_number is None:
-            send_json(conn, {
-                "type": ERROR,
-                "message": "Session is full."
-            })
+            send_json(conn, make_error("Session is full."))
             conn.close()
             return
 
@@ -105,23 +94,12 @@ def handle_connection(manager, conn):
 
         session.add_player(player)
 
-
-    send_json(conn, {
-        "type": WELCOME,
-        "player_number": player.player_number,
-        "players": session.game_state.players,
-        "session_id": session.session_id
-    })
+    send_json(conn, make_welcome(player, session))
 
     if session.state == "lobby":
         send_json(conn, {"type": WAITING_FOR_PLAYERS})
 
-    send_json(conn, {
-        "type": GAME_STATE,
-        "board": session.game_state.serialize_board(),
-        "current_player": session.game_state.current_player_number,
-        "winner": session.game_state.winner,
-    })
+    send_json(conn, make_game_state(session.game_state))
 
     buffer = ""
 

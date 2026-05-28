@@ -21,3 +21,19 @@ def receive_json(conn, buffer):
     line, buffer = buffer.split("\n", 1)
 
     return json.loads(line), buffer
+
+
+def safe_send_json(player, data):
+
+    if not player.connected or not player.connection:
+        return False
+    
+    try:
+
+        send_json(player.connection, data)
+        return True
+    
+    except OSError:
+
+        player.disconnect()
+        return False

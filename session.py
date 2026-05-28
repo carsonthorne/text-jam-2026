@@ -2,12 +2,11 @@ import threading
 import time
 
 from game_state import GameState
-from network import send_json
+from network import send_json, safe_send_json
 from move_validator import validate_partial_move, validate_move
+from messages import make_game_state, make_lobby_state, make_error
 from message_types import (
-    LOBBY_STATE,
     GAME_STARTED,
-    GAME_STATE,
     PARTIAL_VALIDATION,
     ERROR,
     VALIDATE_PARTIAL,
@@ -37,18 +36,11 @@ class Session:
 
     def broadcast_game_state(self):
 
-        state_message = {
-            "type": GAME_STATE,
-            "board": self.game_state.serialize_board(),
-            "current_player": self.game_state.current_player_number,
-            "winner": self.game_state.winner
-        }
-
         for player in self.players.values():
 
             if player.connected and player.connection:
 
-                send_json(player.connection, state_message)
+                safe_send_json(player, make_game_state(self.game_state))
 
 
     def add_player(self, player):
@@ -209,18 +201,11 @@ class Session:
 
     def broadcast_lobby_state(self):
 
-        message = {
-            "type": LOBBY_STATE,
-            "players": self.serialize_players(),
-            "session_id": self.session_id,
-            "num_players": self.num_players
-        }
-
         for player in self.players.values():
 
             if player.connected and player.connection:
 
-                send_json(player.connection, message)
+                safe_send_json(player, make_lobby_state(self))
 
 
     def start_game(self):
@@ -231,7 +216,7 @@ class Session:
             
             if player.connected:
 
-                send_json(player.connection, {"type": GAME_STARTED})
+                safe_send_json(player, {"type": GAME_STARTED})
 
         self.broadcast_game_state()
 
@@ -240,19 +225,13 @@ class Session:
 
         if player.player_number != 1:
 
-            send_json(player.connection, {
-                "type": ERROR,
-                "message": "Only the host can start the game."
-            })
+            safe_send_json(player, make_error("Only the host can start the game."))
 
             return
 
         if len(self.players) != self.num_players:
 
-            send_json(player.connection, {
-                "type": ERROR,
-                "message": "Not enough players."
-            })
+            safe_send_json(player, make_error("Not enough players."))
 
             return
 
@@ -273,7 +252,7 @@ class Session:
                 path
             )
 
-            send_json(player.connection, response)
+            safe_send_json(player, response)
 
         # Player submitting move
         elif message_type == MOVE:
