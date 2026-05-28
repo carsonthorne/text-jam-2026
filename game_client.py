@@ -1,7 +1,7 @@
 import socket
 import threading
 from network import send_json, receive_json
-
+from message_types import CONNECT, DEBUG
 
 class GameClient:
     def __init__(self):
@@ -36,6 +36,26 @@ class GameClient:
         self.receive_thread.start()
 
 
+    def connect_to_session(
+        self,
+        host,
+        port,
+        identity,
+        session_id=None,
+        num_players=None
+    ):
+
+        self.connect(host, port)
+
+        self.send({
+            "type": CONNECT,
+            "player_id": identity["player_id"],
+            "session_id": session_id,
+            "name": identity["name"],
+            "num_players": num_players
+        })
+
+
     def send(self, data):
         send_json(self.socket, data)
 
@@ -60,7 +80,7 @@ class GameClient:
 
             except Exception as e:
                 print("Client receive error:", e)
-                self.send({"type": "debug", "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
+                self.send({"type": DEBUG, "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
                 break
 
         self.running = False

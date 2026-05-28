@@ -7,6 +7,7 @@ from textual.events import Key
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
+from message_types import WAITING_FOR_PLAYERS, GAME_STATE, VALIDATE_PARTIAL, PARTIAL_VALIDATION, MOVE, ERROR, RECONNECTED
 
 
 class GameScreen(Screen):
@@ -88,21 +89,21 @@ class GameScreen(Screen):
 
         msg_type = data["type"]
 
-        if msg_type == "waiting_for_players":
+        if msg_type == WAITING_FOR_PLAYERS:
 
             self.app.call_from_thread(
                 self.log_message,
                 "[yellow]Waiting for more players...[/]"
             )
 
-        elif msg_type == "reconnected":
+        elif msg_type == RECONNECTED:
 
             self.app.call_from_thread(
                 self.log_message,
                 "[green]Reconnected to game.[/]"
             )
 
-        elif msg_type == "partial_validation":
+        elif msg_type == PARTIAL_VALIDATION:
 
             self.app.call_from_thread(
                 self.handle_partial_validation,
@@ -111,7 +112,7 @@ class GameScreen(Screen):
                 self.cursor
             )
 
-        elif msg_type == "game_state":
+        elif msg_type == GAME_STATE:
 
             serialized_board = data["board"]
 
@@ -127,7 +128,7 @@ class GameScreen(Screen):
                 data.get("winner")
             )
 
-        elif msg_type == "error":
+        elif msg_type == ERROR:
 
             self.app.call_from_thread(
                 self.show_error,
@@ -279,7 +280,7 @@ class GameScreen(Screen):
             proposed_path = self.selected_path + [self.cursor]
 
             self.client.send({
-                "type": "validate_partial",
+                "type": VALIDATE_PARTIAL,
                 "path": proposed_path
             })
 
@@ -313,7 +314,7 @@ class GameScreen(Screen):
     def send_move(self):
 
         self.client.send({
-            "type": "move",
+            "type": MOVE,
             "path": self.selected_path
         })
 

@@ -8,6 +8,7 @@ from screens.lobby_screen import LobbyScreen
 from screens.identity_screen import IdentityScreen
 from screens.join_session_screen import JoinSessionScreen
 from local_identity import load_identity, clear_identity
+from message_types import ERROR
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -16,6 +17,7 @@ class MainMenuScreen(Screen):
 
     def __init__(self):
         super().__init__()
+
 
     def compose(self) -> ComposeResult:
 
@@ -45,9 +47,11 @@ class MainMenuScreen(Screen):
         else:
             self.app.push_screen(IdentityScreen())
 
+
     def handle_message(self, data):
-        if data["type"] == "error":
+        if data["type"] == ERROR:
             print(data["message"])
+
 
     def on_button_pressed(self, event: Button.Pressed):
 
@@ -57,97 +61,11 @@ class MainMenuScreen(Screen):
 
             self.app.exit()
 
-        elif button_id == "create_2":
+        elif button_id.startswith("create_"):
 
-            num_players = 2
+            num_players = int(button_id.split("_")[1])
 
-            client = self.app.client
-            identity = client.identity
-
-            if not identity:
-                self.app.push_screen(IdentityScreen())
-                return
-
-            client.connect(HOST, PORT)
-
-            self.app.push_screen(LobbyScreen(client, identity))
-
-            client.send({
-                "type": "connect",
-                "player_id": identity["player_id"],
-                "session_id": None,
-                "name": identity["name"],
-                "num_players": num_players
-            })
-
-        elif button_id == "create_3":
-
-            num_players = 3
-
-            client = self.app.client
-            identity = client.identity
-
-            if not identity:
-                self.app.push_screen(IdentityScreen())
-                return
-
-            client.connect(HOST, PORT)
-
-            self.app.push_screen(LobbyScreen(client, identity))
-
-            client.send({
-                "type": "connect",
-                "player_id": identity["player_id"],
-                "session_id": None,
-                "name": identity["name"],
-                "num_players": num_players
-            })
-
-        elif button_id == "create_4":
-
-            num_players = 4
-
-            client = self.app.client
-            identity = client.identity
-
-            if not identity:
-                self.app.push_screen(IdentityScreen())
-                return
-
-            client.connect(HOST, PORT)
-
-            self.app.push_screen(LobbyScreen(client, identity))
-
-            client.send({
-                "type": "connect",
-                "player_id": identity["player_id"],
-                "session_id": None,
-                "name": identity["name"],
-                "num_players": num_players
-            })
-
-        elif button_id == "create_6":
-
-            num_players = 6
-
-            client = self.app.client
-            identity = client.identity
-
-            if not identity:
-                self.app.push_screen(IdentityScreen())
-                return
-
-            client.connect(HOST, PORT)
-
-            self.app.push_screen(LobbyScreen(client, identity))
-
-            client.send({
-                "type": "connect",
-                "player_id": identity["player_id"],
-                "session_id": None,
-                "name": identity["name"],
-                "num_players": num_players
-            })
+            self.create_session(num_players)
         
         elif button_id == "join":
 
@@ -166,3 +84,25 @@ class MainMenuScreen(Screen):
             self.app.client.identity = None
 
             self.app.push_screen(IdentityScreen())
+
+
+    def create_session(self, num_players):
+
+        client = self.app.client
+        identity = client.identity
+
+        if not identity:
+            self.app.push_screen(IdentityScreen())
+            return
+
+        client.connect_to_session(
+            HOST,
+            PORT,
+            identity,
+            session_id=None,
+            num_players=num_players
+        )
+
+        self.app.push_screen(
+            LobbyScreen(client, identity)
+        )

@@ -5,6 +5,7 @@ from textual.containers import Vertical
 
 from local_identity import save_identity
 from screens.game_screen import GameScreen
+from message_types import WELCOME, LOBBY_STATE, WAITING_FOR_PLAYERS, GAME_STARTED, START_GAME
 
 class LobbyScreen(Screen):
 
@@ -72,7 +73,7 @@ class LobbyScreen(Screen):
 
         msg_type = data["type"]
 
-        if msg_type == "welcome":
+        if msg_type == WELCOME:
 
             self.session_id = data["session_id"]
 
@@ -89,18 +90,18 @@ class LobbyScreen(Screen):
 
             self.app.call_from_thread(self.refresh_lobby)
 
-        elif msg_type == "waiting_for_players":
+        elif msg_type == WAITING_FOR_PLAYERS:
 
             self.app.call_from_thread(
                 self.status_widget.update,
                 "[yellow]Waiting for players...[/]"
             )
 
-        elif msg_type == "game_started":
+        elif msg_type == GAME_STARTED:
 
             self.app.call_from_thread(self._enter_game_screen)
 
-        elif msg_type == "lobby_state":
+        elif msg_type == LOBBY_STATE:
 
             self.session_id = data["session_id"]
 
@@ -128,5 +129,5 @@ class LobbyScreen(Screen):
         if event.button.id == "start_game":
 
             self.client.send({
-                "type": "start_game"
+                "type": START_GAME
             })

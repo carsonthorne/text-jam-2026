@@ -1,8 +1,10 @@
 import threading
 import time
+
 from game_state import GameState
 from network import send_json
 from move_validator import validate_partial_move, validate_move
+from message_types import LOBBY_STATE, GAME_STARTED, GAME_STATE, PARTIAL_VALIDATION, ERROR
 
 RECONNECT_TIMEOUT = 60      # Clean up session after one minute.
 
@@ -26,7 +28,7 @@ class Session:
     def broadcast_game_state(self):
 
         state_message = {
-            "type": "game_state",
+            "type": GAME_STATE,
             "board": self.game_state.serialize_board(),
             "current_player": self.game_state.current_player_number,
             "winner": self.game_state.winner
@@ -84,7 +86,7 @@ class Session:
             )
 
         return {
-            "type": "partial_validation",
+            "type": PARTIAL_VALIDATION,
             "valid": valid,
             "message": reason
         }
@@ -96,7 +98,7 @@ class Session:
             return {
                 "success": False,
                 "response": {
-                    "type": "error",
+                    "type": ERROR,
                     "message": "Game is not active."
                 }
             }
@@ -108,7 +110,7 @@ class Session:
                 return {
                     "success": False,
                     "response": {
-                        "type": "error",
+                        "type": ERROR,
                         "message": "Not your turn."
                     }
                 }
@@ -125,7 +127,7 @@ class Session:
                 return {
                     "success": False,
                     "response": {
-                        "type": "error",
+                        "type": ERROR,
                         "message": reason
                     }
                 }
@@ -189,7 +191,7 @@ class Session:
     def broadcast_lobby_state(self):
 
         message = {
-            "type": "lobby_state",
+            "type": LOBBY_STATE,
             "players": self.serialize_players(),
             "session_id": self.session_id,
             "num_players": self.num_players
@@ -211,6 +213,6 @@ class Session:
             
             if player.connected:
 
-                send_json(player.connection, {"type": "game_started"})
+                send_json(player.connection, {"type": GAME_STARTED})
 
         self.broadcast_game_state()

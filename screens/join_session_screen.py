@@ -38,15 +38,13 @@ class JoinSessionScreen(Screen):
 
         identity = client.identity
 
-        client.connect(HOST, PORT)
+        client.connect_to_session(
+            HOST,
+            PORT,
+            identity,
+            session_id=session_id
+        )
 
         self.app.push_screen(
             LobbyScreen(client, identity)
         )
-
-        client.send({
-            "type": "connect",
-            "player_id": identity["player_id"],
-            "session_id": session_id,
-            "name": identity["name"]
-        })

@@ -6,6 +6,7 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
+from message_types import CONNECT, WELCOME, WAITING_FOR_PLAYERS, GAME_STATE, VALIDATE_PARTIAL, MOVE, ERROR, RECONNECTED, START_GAME, DEBUG
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -23,7 +24,7 @@ def handle_connection(manager, conn):
         conn.close()
         return
 
-    if data["type"] != "connect":
+    if data["type"] != CONNECT:
         conn.close()
         return
 
@@ -38,7 +39,7 @@ def handle_connection(manager, conn):
         if session is None:
 
             send_json(conn, {
-                "type": "error",
+                "type": ERROR,
                 "message": "Session not found."
             })
 
@@ -67,13 +68,13 @@ def handle_connection(manager, conn):
         player.last_seen = time.time()
         session.touch()
 
-        send_json(conn, {"type": "reconnected"})
+        send_json(conn, {"type": RECONNECTED})
 
     # New players
     else:
         if len(session.players) >= session.num_players:
             send_json(conn, {
-                "type": "error",
+                "type": ERROR,
                 "message": "Session is full."
             })
             conn.close()
@@ -82,7 +83,7 @@ def handle_connection(manager, conn):
         player_number = session.assign_player_number()
         if player_number is None:
             send_json(conn, {
-                "type": "error",
+                "type": ERROR,
                 "message": "Session is full."
             })
             conn.close()
@@ -95,17 +96,17 @@ def handle_connection(manager, conn):
         session.add_player(player)
 
     send_json(conn, {
-        "type": "welcome",
+        "type": WELCOME,
         "player_number": player.player_number,
         "players": session.game_state.players,
         "session_id": session.session_id
     })
 
     if session.state == "lobby":
-        send_json(conn, {"type": "waiting_for_players"})
+        send_json(conn, {"type": WAITING_FOR_PLAYERS})
 
     send_json(conn, {
-        "type": "game_state",
+        "type": GAME_STATE,
         "board": session.game_state.serialize_board(),
         "current_player": session.game_state.current_player_number,
         "winner": session.game_state.winner,
@@ -124,7 +125,7 @@ def handle_connection(manager, conn):
                 break
 
             # Player making selection
-            if data["type"] == "validate_partial":
+            if data["type"] == VALIDATE_PARTIAL:
 
                 path = [tuple(coord) for coord in data["path"]]
 
@@ -135,7 +136,7 @@ def handle_connection(manager, conn):
                 continue
 
             # Player submitting move
-            elif data["type"] == "move":
+            elif data["type"] == MOVE:
 
                 path = [tuple(coord) for coord in data["path"]]
 
@@ -147,12 +148,12 @@ def handle_connection(manager, conn):
                 continue
 
             # Clicked 'start game' button in lobby
-            elif data["type"] == "start_game":
+            elif data["type"] == START_GAME:
                 print("start game button clicked")
                 if player.player_number != 1:
                     print("not player 1")
                     send_json(conn, {
-                        "type": "error",
+                        "type": ERROR,
                         "message": "Only the host can start the game."
                     })
 
@@ -161,7 +162,7 @@ def handle_connection(manager, conn):
                 if len(session.players) != session.num_players:
                     print("not the right amount of players")
                     send_json(conn, {
-                        "type": "error",
+                        "type": ERROR,
                         "message": "Not enough players."
                     })
 
@@ -171,7 +172,7 @@ def handle_connection(manager, conn):
 
                 continue
 
-            elif data["type"] == "debug":
+            elif data["type"] == DEBUG:
                 print("DEBUG: ", data["message"])
 
         except Exception as e:
