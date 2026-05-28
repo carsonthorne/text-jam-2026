@@ -6,7 +6,15 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
-from message_types import CONNECT, WELCOME, WAITING_FOR_PLAYERS, GAME_STATE, VALIDATE_PARTIAL, MOVE, ERROR, RECONNECTED, START_GAME, DEBUG
+from message_types import (
+    CONNECT,
+    WELCOME,
+    WAITING_FOR_PLAYERS,
+    GAME_STATE,
+    ERROR,
+    RECONNECTED,
+    DEBUG
+)
 
 HOST = "127.0.0.1"
 PORT = 5555
@@ -58,6 +66,7 @@ def handle_connection(manager, conn):
 
         print(f"Created session {session.session_id}")
 
+
     # Reconnect player
     if player_id in session.players:
 
@@ -69,6 +78,7 @@ def handle_connection(manager, conn):
         session.touch()
 
         send_json(conn, {"type": RECONNECTED})
+
 
     # New players
     else:
@@ -94,6 +104,7 @@ def handle_connection(manager, conn):
         player.attach_connection(conn)
 
         session.add_player(player)
+
 
     send_json(conn, {
         "type": WELCOME,
@@ -124,56 +135,13 @@ def handle_connection(manager, conn):
             if data is None:
                 break
 
-            # Player making selection
-            if data["type"] == VALIDATE_PARTIAL:
-
-                path = [tuple(coord) for coord in data["path"]]
-
-                response = session.validate_partial_selection(player, path)
-
-                send_json(conn, response)
-
-                continue
-
-            # Player submitting move
-            elif data["type"] == MOVE:
-
-                path = [tuple(coord) for coord in data["path"]]
-
-                result = session.handle_move(player, path)
-
-                if not result["success"]:
-                    send_json(conn, result["response"])
-
-                continue
-
-            # Clicked 'start game' button in lobby
-            elif data["type"] == START_GAME:
-                print("start game button clicked")
-                if player.player_number != 1:
-                    print("not player 1")
-                    send_json(conn, {
-                        "type": ERROR,
-                        "message": "Only the host can start the game."
-                    })
-
-                    continue
-
-                if len(session.players) != session.num_players:
-                    print("not the right amount of players")
-                    send_json(conn, {
-                        "type": ERROR,
-                        "message": "Not enough players."
-                    })
-
-                    continue
-
-                session.start_game()
-
-                continue
-
-            elif data["type"] == DEBUG:
+            if data["type"] == DEBUG:
+                
                 print("DEBUG: ", data["message"])
+                
+                continue
+
+            session.handle_message(player, data)
 
         except Exception as e:
             # print("Error:", e)

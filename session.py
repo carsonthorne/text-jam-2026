@@ -4,7 +4,16 @@ import time
 from game_state import GameState
 from network import send_json
 from move_validator import validate_partial_move, validate_move
-from message_types import LOBBY_STATE, GAME_STARTED, GAME_STATE, PARTIAL_VALIDATION, ERROR
+from message_types import (
+    LOBBY_STATE,
+    GAME_STARTED,
+    GAME_STATE,
+    PARTIAL_VALIDATION,
+    ERROR,
+    VALIDATE_PARTIAL,
+    MOVE,
+    START_GAME
+)
 
 RECONNECT_TIMEOUT = 60      # Clean up session after one minute.
 
@@ -25,6 +34,7 @@ class Session:
         self.created_at = time.time()
         self.last_activity = time.time()
 
+
     def broadcast_game_state(self):
 
         state_message = {
@@ -40,6 +50,7 @@ class Session:
 
                 send_json(player.connection, state_message)
 
+
     def add_player(self, player):
         
         self.touch()
@@ -53,9 +64,11 @@ class Session:
 
         return True
     
+
     def touch(self):
 
         self.last_activity = time.time()
+
 
     def can_start(self):
         return len(self.players) == self.num_players
@@ -75,6 +88,7 @@ class Session:
         
         return None
     
+
     def validate_partial_selection(self, player, path):
 
         with self.lock:
@@ -91,6 +105,7 @@ class Session:
             "message": reason
         }
     
+
     def handle_move(self, player, path):
 
         if self.state != "in_progress":
@@ -143,6 +158,7 @@ class Session:
 
         return {"success": True}
     
+
     def handle_disconnect(self, player):
 
         player.disconnect()
@@ -154,6 +170,7 @@ class Session:
             f"from session {self.session_id}"
         )
 
+
     def has_disconnected_players(self):
 
         return any(
@@ -161,6 +178,7 @@ class Session:
             for player in self.players.values()
         )
     
+
     def is_abandoned(self):
 
         now = time.time()
@@ -174,6 +192,7 @@ class Session:
                 return False
             
         return True
+    
     
     def serialize_players(self):
 
@@ -216,3 +235,62 @@ class Session:
                 send_json(player.connection, {"type": GAME_STARTED})
 
         self.broadcast_game_state()
+
+
+    def handle_start_game(self, player):
+
+        if player.player_number != 1:
+
+            send_json(player.connection, {
+                "type": ERROR,
+                "message": "Only the host can start the game."
+            })
+
+            return
+
+        if len(self.players) != self.num_players:
+
+            send_json(player.connection, {
+                "type": ERROR,
+                "message": "Not enough players."
+            })
+
+            return
+
+        self.start_game()
+
+
+    def handle_message(self, player, data):
+
+        message_type = data["type"]
+
+        # Player making selection
+        if message_type == VALIDATE_PARTIAL:
+
+            path = [tuple(coord) for coord in data["path"]]
+
+            response = self.validate_partial_selection(
+                player,
+                path
+            )
+
+            send_json(player.connection, response)
+
+        # Player submitting move
+        elif message_type == MOVE:
+
+            path = [tuple(coord) for coord in data["path"]]
+
+            result = self.handle_move(player, path)
+
+            if not result["success"]:
+
+                send_json(
+                    player.connection,
+                    result["response"]
+                )
+
+        # Host starting game
+        elif message_type == START_GAME:
+
+            self.handle_start_game(player)
