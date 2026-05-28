@@ -84,3 +84,7 @@ class GameClient:
                 break
 
         self.running = False
+
+    def dispatch_to_ui(self, app, callback, *args):
+
+        app.call_from_thread(callback, *args)

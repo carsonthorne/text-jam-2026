@@ -88,18 +88,25 @@ class LobbyScreen(Screen):
 
             self.player_configs = data["players"]
 
-            self.app.call_from_thread(self.refresh_lobby)
+            self.client.dispatch_to_ui(
+                self.app,
+                self.refresh_lobby
+            )
 
         elif msg_type == WAITING_FOR_PLAYERS:
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.status_widget.update,
                 "[yellow]Waiting for players...[/]"
             )
 
         elif msg_type == GAME_STARTED:
 
-            self.app.call_from_thread(self._enter_game_screen)
+            self.client.dispatch_to_ui(
+                self.app,
+                self._enter_game_screen
+            )
 
         elif msg_type == LOBBY_STATE:
 
@@ -109,7 +116,10 @@ class LobbyScreen(Screen):
 
             self.num_players = data["num_players"]
 
-            self.app.call_from_thread(self.refresh_lobby)
+            self.client.dispatch_to_ui(
+                self.app,
+                self.refresh_lobby
+            )
 
 
     def _enter_game_screen(self):

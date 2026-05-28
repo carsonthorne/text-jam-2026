@@ -91,21 +91,24 @@ class GameScreen(Screen):
 
         if msg_type == WAITING_FOR_PLAYERS:
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.log_message,
                 "[yellow]Waiting for more players...[/]"
             )
 
         elif msg_type == RECONNECTED:
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.log_message,
                 "[green]Reconnected to game.[/]"
             )
 
         elif msg_type == PARTIAL_VALIDATION:
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.handle_partial_validation,
                 data["valid"],
                 data["message"],
@@ -121,7 +124,8 @@ class GameScreen(Screen):
                 q, r = map(int, key.split(","))
                 new_board[(q, r)] = value
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.update_game_state,
                 new_board,
                 data["current_player"],
@@ -130,12 +134,13 @@ class GameScreen(Screen):
 
         elif msg_type == ERROR:
 
-            self.app.call_from_thread(
+            self.client.dispatch_to_ui(
+                self.app,
                 self.show_error,
                 data["message"]
             )
 
-    
+
     def update_game_state(self, new_board, current_player, winner):
 
         self.board = new_board
