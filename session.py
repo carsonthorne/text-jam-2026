@@ -33,6 +33,12 @@ class Session:
         self.created_at = time.time()
         self.last_activity = time.time()
 
+        self.message_handlers = {
+            VALIDATE_PARTIAL: self._handle_validate_partial,
+            MOVE: self._handle_move_message,
+            START_GAME: self._handle_start_game_message
+        }
+
 
     def broadcast_game_state(self):
 
@@ -221,7 +227,7 @@ class Session:
         self.broadcast_game_state()
 
 
-    def handle_start_game(self, player):
+    def _handle_start_game_message(self, player, data=None):
 
         if player.player_number != 1:
 
@@ -238,37 +244,38 @@ class Session:
         self.start_game()
 
 
-    def handle_message(self, player, data):
+    def _handle_validate_partial(self, player, data):
 
-        message_type = data["type"]
+        path = [tuple(coord) for coord in data["path"]]
 
-        # Player making selection
-        if message_type == VALIDATE_PARTIAL:
+        response = self.validate_partial_selection(
+            player,
+            path
+        )
 
-            path = [tuple(coord) for coord in data["path"]]
+        send_json(player.connection, response)
 
-            response = self.validate_partial_selection(
-                player,
-                path
+
+    def _handle_move_message(self, player, data):
+
+        path = [tuple(coord) for coord in data["path"]]
+
+        result = self.handle_move(player, path)
+
+        if not result["success"]:
+
+            send_json(
+                player.connection,
+                result["response"]
             )
 
-            safe_send_json(player, response)
 
-        # Player submitting move
-        elif message_type == MOVE:
+    def handle_message(self, player, data):
 
-            path = [tuple(coord) for coord in data["path"]]
+        message_type = data.get("type")
 
-            result = self.handle_move(player, path)
+        handler = self.message_handlers.get(message_type)
 
-            if not result["success"]:
+        if handler:
 
-                send_json(
-                    player.connection,
-                    result["response"]
-                )
-
-        # Host starting game
-        elif message_type == START_GAME:
-
-            self.handle_start_game(player)
+            handler(player, data)
