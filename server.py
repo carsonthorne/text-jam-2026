@@ -72,7 +72,7 @@ def handle_connection(manager, conn):
 
         player = session.players[player_id]
         player.attach_connection(conn)
-        player.connected = True
+        player.reconnect(conn)
         session.broadcast_lobby_state()
         player.last_seen = time.time()
         session.touch()

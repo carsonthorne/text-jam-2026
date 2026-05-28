@@ -193,7 +193,7 @@ class Session:
             
         return True
     
-    
+
     def serialize_players(self):
 
         return [
@@ -220,7 +220,6 @@ class Session:
 
             if player.connected and player.connection:
 
-                # self.app.client.send(player.connection, message)
                 send_json(player.connection, message)
 
 

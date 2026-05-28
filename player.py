@@ -30,3 +30,9 @@ class Player:
         self.connected = False
 
         self.last_seen = time.time()
+
+    def reconnect(self, connection):
+
+        self.connection = connection
+        self.connected = True
+        self.last_seen = time.time()
