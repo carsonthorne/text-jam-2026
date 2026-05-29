@@ -5,7 +5,13 @@ from textual.containers import Vertical
 
 from local_identity import save_identity
 from screens.game_screen import GameScreen
-from message_types import WELCOME, LOBBY_STATE, WAITING_FOR_PLAYERS, GAME_STARTED, START_GAME
+from message_types import (
+    WELCOME,
+    LOBBY_STATE,
+    WAITING_FOR_PLAYERS,
+    GAME_STARTED,
+    START_GAME
+)
 
 class LobbyScreen(Screen):
 
@@ -21,6 +27,13 @@ class LobbyScreen(Screen):
         self.num_players = None
 
         self.client.on_message = self.handle_message
+
+        self.message_handlers = {
+            WELCOME: self._handle_welcome,
+            WAITING_FOR_PLAYERS: self._handle_waiting,
+            GAME_STARTED: self._handle_game_started,
+            LOBBY_STATE: self._handle_lobby_state
+        }
 
 
     def compose(self) -> ComposeResult:
@@ -71,55 +84,62 @@ class LobbyScreen(Screen):
 
     def handle_message(self, data):
 
-        msg_type = data["type"]
+        handler = self.message_handlers.get(data["type"])
 
-        if msg_type == WELCOME:
+        if handler:
+            handler(data)
 
-            self.session_id = data["session_id"]
 
-            self.identity["session_id"] = data["session_id"]
+    def _handle_welcome(self, data):
 
-            save_identity(self.identity)
+        self.session_id = data["session_id"]
 
-            self.player_number = data["player_number"]
+        self.identity["session_id"] = data["session_id"]
 
-            if self.player_number != 1:
-                self.start_button.disabled = True
+        save_identity(self.identity)
 
-            self.player_configs = data["players"]
+        self.player_number = data["player_number"]
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.refresh_lobby
-            )
+        if self.player_number != 1:
+            self.start_button.disabled = True
 
-        elif msg_type == WAITING_FOR_PLAYERS:
+        self.player_configs = data["players"]
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.status_widget.update,
-                "[yellow]Waiting for players...[/]"
-            )
+        self.client.dispatch_to_ui(
+            self.app,
+            self.refresh_lobby
+        )
 
-        elif msg_type == GAME_STARTED:
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self._enter_game_screen
-            )
+    def _handle_waiting(self, data):
 
-        elif msg_type == LOBBY_STATE:
+        self.client.dispatch_to_ui(
+            self.app,
+            self.status_widget.update,
+            "[yellow]Waiting for players...[/]"
+        )
 
-            self.session_id = data["session_id"]
 
-            self.players = data["players"]
+    def _handle_game_started(self, data):
 
-            self.num_players = data["num_players"]
+        self.client.dispatch_to_ui(
+            self.app,
+            self._enter_game_screen
+        )
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.refresh_lobby
-            )
+
+    def _handle_lobby_state(self, data):
+
+        self.session_id = data["session_id"]
+
+        self.players = data["players"]
+
+        self.num_players = data["num_players"]
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self.refresh_lobby
+        )
 
 
     def _enter_game_screen(self):

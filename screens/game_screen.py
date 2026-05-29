@@ -7,7 +7,15 @@ from textual.events import Key
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
-from message_types import WAITING_FOR_PLAYERS, GAME_STATE, VALIDATE_PARTIAL, PARTIAL_VALIDATION, MOVE, ERROR, RECONNECTED
+from message_types import (
+    WAITING_FOR_PLAYERS,
+    GAME_STATE,
+    VALIDATE_PARTIAL,
+    PARTIAL_VALIDATION,
+    MOVE,
+    ERROR,
+    RECONNECTED
+)
 
 
 class GameScreen(Screen):
@@ -33,6 +41,16 @@ class GameScreen(Screen):
         self.tick = 0
 
         self.client.on_message = self.handle_message
+
+        self.message_handlers = {
+            WAITING_FOR_PLAYERS: self._handle_waiting,
+            GAME_STATE: self._handle_game_state,
+            # VALIDATE_PARTIAL: self._handle_validate_partial,
+            PARTIAL_VALIDATION: self._handle_partial_validation,
+            # MOVE: self._handle_move,
+            ERROR: self._handle_error,
+            RECONNECTED: self._handle_reconnect
+        }
 
 
     def compose(self) -> ComposeResult:
@@ -87,59 +105,67 @@ class GameScreen(Screen):
 
     def handle_message(self, data):
 
-        msg_type = data["type"]
+        handler = self.message_handlers.get(data["type"])
 
-        if msg_type == WAITING_FOR_PLAYERS:
+        if handler:
+            handler(data)
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.log_message,
-                "[yellow]Waiting for more players...[/]"
-            )
 
-        elif msg_type == RECONNECTED:
+    def _handle_waiting(self, data):
+        
+        self.client.dispatch_to_ui(
+            self.app,
+            self.log_message,
+            "[yellow]Waiting for more players...[/]"
+        )
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.log_message,
-                "[green]Reconnected to game.[/]"
-            )
 
-        elif msg_type == PARTIAL_VALIDATION:
+    def _handle_game_state(self, data):
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.handle_partial_validation,
-                data["valid"],
-                data["message"],
-                self.cursor
-            )
+        serialized_board = data["board"]
 
-        elif msg_type == GAME_STATE:
+        new_board = {}
+        for key, value in serialized_board.items():
+            q, r = map(int, key.split(","))
+            new_board[(q, r)] = value
 
-            serialized_board = data["board"]
+        self.client.dispatch_to_ui(
+            self.app,
+            self.update_game_state,
+            new_board,
+            data["current_player"],
+            data.get("winner")
+        )
 
-            new_board = {}
-            for key, value in serialized_board.items():
-                q, r = map(int, key.split(","))
-                new_board[(q, r)] = value
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.update_game_state,
-                new_board,
-                data["current_player"],
-                data.get("winner")
-            )
+    def _handle_partial_validation(self, data):
+        
+        self.client.dispatch_to_ui(
+            self.app,
+            self.handle_partial_validation,
+            data["valid"],
+            data["message"],
+            self.cursor
+        )
+    
+    
+    def _handle_error(self, data):
 
-        elif msg_type == ERROR:
+        self.client.dispatch_to_ui(
+            self.app,
+            self.show_error,
+            data["message"]
+        )
 
-            self.client.dispatch_to_ui(
-                self.app,
-                self.show_error,
-                data["message"]
-            )
-
+    
+    def _handle_reconnect(self, data):
+    
+        self.client.dispatch_to_ui(
+            self.app,
+            self.log_message,
+            "[green]Reconnected to game.[/]"
+        )
+    
 
     def update_game_state(self, new_board, current_player, winner):
 
