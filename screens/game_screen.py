@@ -8,6 +8,7 @@ from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
 from message_types import (
+    WELCOME,
     WAITING_FOR_PLAYERS,
     GAME_STATE,
     VALIDATE_PARTIAL,
@@ -20,7 +21,7 @@ from message_types import (
 
 class GameScreen(Screen):
 
-    def __init__(self, client, identity, player_number, player_configs):
+    def __init__(self, client, identity, player_number=None, player_configs=None):
         
         super().__init__()
 
@@ -43,11 +44,10 @@ class GameScreen(Screen):
         self.client.on_message = self.handle_message
 
         self.message_handlers = {
+            WELCOME: self._handle_welcome,
             WAITING_FOR_PLAYERS: self._handle_waiting,
             GAME_STATE: self._handle_game_state,
-            # VALIDATE_PARTIAL: self._handle_validate_partial,
             PARTIAL_VALIDATION: self._handle_partial_validation,
-            # MOVE: self._handle_move,
             ERROR: self._handle_error,
             RECONNECTED: self._handle_reconnect
         }
@@ -74,21 +74,24 @@ class GameScreen(Screen):
 
     def on_mount(self):
 
+        self.app.log("game screen log test", self.player_configs)
         self.refresh_board()
 
         self.set_interval(0.08, self.animate_cursor)
 
+        if not self.player_configs:
+            return
+
         player_config = next(
             (
                 config
-                    for config in self.player_configs
-                    if config["player"] == self.player_number
+                for config in self.player_configs
+                if config["player"] == self.player_number
             ),
             None
         )
 
         if player_config is None:
-            self.log_message("[red]Failed to load player config[/]")
             return
 
         start_zone = player_config["start"]
@@ -109,6 +112,13 @@ class GameScreen(Screen):
 
         if handler:
             handler(data)
+
+
+    def _handle_welcome(self, data):
+
+        self.player_number = data["player_number"]
+
+        self.player_configs = data["players"]
 
 
     def _handle_waiting(self, data):
@@ -222,7 +232,7 @@ class GameScreen(Screen):
     def show_error(self, message):
 
         self.log_message(f"[bold red]Invalid move:[/] {message}")
-        
+
 
     def refresh_board(self):
 

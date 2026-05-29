@@ -4,17 +4,22 @@ import time
 from game_state import GameState
 from network import send_json, safe_send_json
 from move_validator import validate_partial_move, validate_move
-from messages import make_game_state, make_lobby_state, make_error
+from session_states import LOBBY, IN_PROGRESS
+from messages import (
+    make_game_state,
+    make_lobby_state,
+    make_error,
+    make_partial_validation,
+    make_game_started
+)
 from message_types import (
-    GAME_STARTED,
-    PARTIAL_VALIDATION,
     ERROR,
     VALIDATE_PARTIAL,
     MOVE,
     START_GAME
 )
 
-RECONNECT_TIMEOUT = 60      # Clean up session after one minute.
+RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
 
 class Session:
 
@@ -28,7 +33,7 @@ class Session:
 
         self.lock = threading.Lock()
 
-        self.state = "lobby"
+        self.state = LOBBY
 
         self.created_at = time.time()
         self.last_activity = time.time()
@@ -47,6 +52,26 @@ class Session:
             if player.connected and player.connection:
 
                 safe_send_json(player, make_game_state(self.game_state))
+
+
+    def get_connected_players(self):
+
+        return [
+            player.player_id
+            for player in self.players.values()
+            if player.connected
+        ]
+
+
+    def get_player_num(self, player_id):
+
+        for player in self.players.values():
+
+            if player.player_id == player_id:
+
+                return player.player_number
+
+        return None
 
 
     def add_player(self, player):
@@ -97,16 +122,12 @@ class Session:
                 path
             )
 
-        return {
-            "type": PARTIAL_VALIDATION,
-            "valid": valid,
-            "message": reason
-        }
+        return make_partial_validation(valid, reason)
     
 
     def handle_move(self, player, path):
 
-        if self.state != "in_progress":
+        if self.state != IN_PROGRESS:
 
             return {
                 "success": False,
@@ -164,7 +185,7 @@ class Session:
         self.broadcast_lobby_state()
 
         print(
-            f"Player {player.player_number} disconnected "
+            f"session.py: handle_disconnect(): Player {player.player_number} disconnected "
             f"from session {self.session_id}"
         )
 
@@ -215,14 +236,14 @@ class Session:
 
 
     def start_game(self):
-        self.state = "in_progress"
 
+        self.state = IN_PROGRESS
 
         for player in self.players.values():
             
             if player.connected:
 
-                safe_send_json(player, {"type": GAME_STARTED})
+                safe_send_json(player, make_game_started())
 
         self.broadcast_game_state()
 

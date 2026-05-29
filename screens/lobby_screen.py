@@ -42,18 +42,22 @@ class LobbyScreen(Screen):
         self.players_widget = Static()
         self.status_widget = Static()
         self.start_button = Button("Start Game", id="start_game")
+        self.back_button = Button("Back to Main Menu", id="back")
 
         yield Vertical(
             self.title_widget,
             self.players_widget,
             self.status_widget,
-            self.start_button
+            self.start_button,
+            self.back_button
         )
 
 
     def on_mount(self):
 
-        self.refresh_lobby()
+        # self.refresh_lobby()
+        if self.session_id and self.players:
+            self.refresh_lobby()
 
 
     def refresh_lobby(self):
@@ -97,6 +101,8 @@ class LobbyScreen(Screen):
         self.identity["session_id"] = data["session_id"]
 
         save_identity(self.identity)
+
+        self.client.send({"type":"debug", "message":f"handle welcome: session id: {self.identity["session_id"]}"})
 
         self.player_number = data["player_number"]
 
@@ -161,3 +167,7 @@ class LobbyScreen(Screen):
             self.client.send({
                 "type": START_GAME
             })
+
+        if event.button.id == "back":
+
+            self.app.pop_screen()

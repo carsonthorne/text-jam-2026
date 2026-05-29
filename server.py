@@ -6,11 +6,19 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
-from messages import make_welcome, make_error, make_game_state
+from session_states import LOBBY
+from messages import (
+    make_welcome,
+    make_error,
+    make_game_state,
+    make_reconnected,
+    make_waiting_for_players,
+    make_invalid_session,
+    make_session_validated,
+    make_duplicate_player
+)
 from message_types import (
     CONNECT,
-    WAITING_FOR_PLAYERS,
-    RECONNECTED,
     DEBUG
 )
 
@@ -26,56 +34,69 @@ def handle_connection(manager, conn):
 
     data, buffer = receive_json(conn, buffer)
 
+    print("got data:", data, "\n")
+
     if data is None:
         conn.close()
         return
 
     if data["type"] != CONNECT:
+        print("closing connection prematurely")
         conn.close()
         return
 
     player_id = data["player_id"]
-
     session_id = data.get("session_id")
+    session = None
 
+    # Identity file has session id
     if session_id:
 
         session = manager.get_session(session_id)
 
+        # Session ID belongs to expired / invalid session.
         if session is None:
-
-            send_json(conn, make_error("Session not found."))
-
+            print(f"INVALID SESSION: data: {data}")
+            send_json(conn, make_invalid_session())
             conn.close()
             return
-        
-        print(f"Player connected to session {session.session_id}")
-        
-    else:
 
+
+        session_players = session.get_connected_players()
+
+        # Trying to connect to session while already connected (Duplicate player).
+        if player_id in session_players:
+            print("Player is already connected to the session")
+            send_json(conn, make_duplicate_player())
+            conn.close()
+            return
+
+        # Session is valid
+        player_num = session.get_player_num(player_id)
+        send_json(conn, make_session_validated(session, player_num))
+
+
+    # Player created a new session
+    if session is None:
         num_players = data.get("num_players", 2)
-
         session = manager.create_session(num_players)
-
         session_id = session.session_id
 
-        print(f"Created session {session.session_id}")
 
-
-    # Reconnect player
+    # Reconnect player to valid session
     if player_id in session.players:
 
         player = session.players[player_id]
         player.attach_connection(conn)
-        player.reconnect(conn)
         session.broadcast_lobby_state()
         player.last_seen = time.time()
         session.touch()
 
-        send_json(conn, {"type": RECONNECTED})
+        send_json(conn, make_welcome(player, session))
+        send_json(conn, make_reconnected())
 
 
-    # New players
+    # New player connecting to session
     else:
         if len(session.players) >= session.num_players:
             send_json(conn, make_error("Session is full."))
@@ -89,15 +110,13 @@ def handle_connection(manager, conn):
             return
 
         player = Player( player_id, player_number, data["name"], session.session_id)
-
         player.attach_connection(conn)
-
         session.add_player(player)
+        send_json(conn, make_welcome(player, session))
 
-    send_json(conn, make_welcome(player, session))
 
-    if session.state == "lobby":
-        send_json(conn, {"type": WAITING_FOR_PLAYERS})
+    if session.state == LOBBY:
+        send_json(conn, make_waiting_for_players())
 
     send_json(conn, make_game_state(session.game_state))
 
@@ -122,7 +141,7 @@ def handle_connection(manager, conn):
             session.handle_message(player, data)
 
         except Exception as e:
-            # print("Error:", e)
+            print("\nError: server receive loop:", e)
             traceback.print_exc()
             break
 
@@ -153,7 +172,7 @@ def start_server():
 
         conn, addr = server.accept()
 
-        print(f"Connected: {addr}")
+        print(f"Server.py: start_server(): Connected: {addr}")
 
         thread = threading.Thread(
             target=handle_connection,

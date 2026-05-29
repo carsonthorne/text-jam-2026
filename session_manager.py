@@ -26,7 +26,7 @@ class SessionManager:
 
         return session
     
-    
+
     def get_session(self, session_id):
 
         with self.lock:
@@ -53,4 +53,4 @@ class SessionManager:
 
             with self.lock:
 
-                del self.sessions[session_id]
+                self.sessions.pop(session_id, None)

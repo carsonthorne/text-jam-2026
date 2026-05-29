@@ -4,6 +4,7 @@ from network import send_json, receive_json
 from message_types import CONNECT, DEBUG
 
 class GameClient:
+    
     def __init__(self):
         self.socket = None
         self.receive_thread = None
@@ -75,7 +76,7 @@ class GameClient:
                     break
 
                 if self.on_message:
-                    
+
                     self.on_message(data)
 
             except Exception as e:
