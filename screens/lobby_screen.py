@@ -1,6 +1,6 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Static, Button
+from textual.widgets import Static, Button, Select
 from textual.containers import Vertical
 
 from local_identity import save_identity
@@ -37,6 +37,16 @@ class LobbyScreen(Screen):
     def compose(self) -> ComposeResult:
 
         self.title_widget = Static()
+        self.player_count_select = Select(
+            [
+                ("2 Players", 2),
+                ("3 Players", 3),
+                ("4 Players", 4),
+                ("6 Players", 6),
+            ],
+            value=2,
+            id="player_count"
+        )
         self.players_widget = Static()
         self.status_widget = Static()
         self.start_button = Button("Start Game", id="start_game")
@@ -44,6 +54,7 @@ class LobbyScreen(Screen):
 
         yield Vertical(
             self.title_widget,
+            self.player_count_select,
             self.players_widget,
             self.status_widget,
             self.start_button,
@@ -168,3 +179,10 @@ class LobbyScreen(Screen):
         if event.button.id == "back":
 
             self.app.pop_screen()
+
+
+    def on_select_changed(self, event: Select.Changed):
+
+        if event.select.id == "player_count":
+
+            self.app.client.send({"type": "debug", "message":f"Selected player count: {event.value}"})
