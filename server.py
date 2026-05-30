@@ -92,14 +92,9 @@ def handle_connection(manager, conn):
 
     # New player connecting to session
     else:
-        player_number = session.assign_player_number()
-        if player_number is None:
-            print("SERVER: FAILED TO ASSIGN NUMBER")
-            send_json(conn, make_error("Session is full."))
-            conn.close()
-            return
+        
 
-        player = Player( player_id, player_number, data["name"], session.session_id)
+        player = Player( player_id, data["name"], session.session_id)
         player.attach_connection(conn)
         session.add_player(player)
         print(f"\nPlayer id: {player_id} connected to Session id: {session.session_id}")

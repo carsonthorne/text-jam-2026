@@ -106,7 +106,10 @@ class LobbyScreen(Screen):
 
         # Update status
         if len(self.players) == self.num_players:
-            status_message = "[bold green]Ready to start game[/]"
+            if self.is_host:
+                status_message = "[bold green]Ready to start game[/]"
+            else:
+                status_message = "[bold green]Waiting for host to start game[/]"
         elif len(self.players) < self.num_players:
             status_message = "[bold yellow]Waiting for players...[/]"
         elif len(self.players) > self.num_players:
@@ -133,8 +136,6 @@ class LobbyScreen(Screen):
 
         self.player_number = data["player_number"]
 
-        self.is_host = (self.player_number == 1)
-
         # Only host can start the game
         if not self.is_host:
             self.start_button.disabled = True
@@ -149,6 +150,8 @@ class LobbyScreen(Screen):
 
 
     def _handle_game_started(self, data):
+
+        self.player_number = data["player_number"]
 
         self.player_configs = data["player_configs"]
 
@@ -166,6 +169,8 @@ class LobbyScreen(Screen):
 
         self.num_players = data["num_players"]
 
+        self.is_host = data["is_host"]
+
         self.client.dispatch_to_ui(
             self.app,
             self.refresh_lobby
@@ -174,6 +179,8 @@ class LobbyScreen(Screen):
 
     def _enter_game_screen(self):
         
+        self.client.send({"type": "debug", "message": f"Lobby Screen: _enter_game_screen: {self.player_number}"})
+
         self.app.push_screen(
             GameScreen(
                 self.client,

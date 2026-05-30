@@ -26,9 +26,13 @@ class Session:
 
     def __init__(self, session_id, num_players):
         self.session_id = session_id
-        self.num_players = num_players
+        
+        self.lobby_num_players = num_players
+        self.game_num_players = None
 
         self.players = {}
+
+        self.host_player_id = None
 
         self.game_state = None
 
@@ -50,10 +54,10 @@ class Session:
     def add_player(self, player):
         
         self.touch()
-
-        if len(self.players) >= self.num_players:
-            return False
         
+        if not self.host_player_id:
+            self.host_player_id = player.player_id
+
         self.players[player.player_id] = player
 
         self.broadcast_lobby_state()
@@ -61,19 +65,9 @@ class Session:
         return True
 
 
-    def assign_player_number(self):
-
-        used = {
-            p.player_number
-            for p in self.players.values()
-        }
-
-        for i in range(1, self.num_players + 1):
-
-            if i not in used:
-                return i
-        
-        return None
+    def assign_player_numbers(self):
+        for i, player in enumerate(self.players.values(), start=1):
+            player.player_number = i
 
 
     def get_connected_players(self):
@@ -103,7 +97,7 @@ class Session:
                 "name": player.name,
                 "player_number": player.player_number,
                 "connected": player.connected,
-                "is_host": player.player_number == 1
+                "is_host": player.player_id == self.host_player_id
             }
             for player in self.players.values()
         ]
@@ -155,7 +149,7 @@ class Session:
 
             if player.connected and player.connection:
 
-                safe_send_json(player, make_lobby_state(self))
+                safe_send_json(player, make_lobby_state(self, player))
 
 
     def broadcast_game_state(self):
@@ -173,15 +167,21 @@ class Session:
 
     def start_game(self):
 
-        self.game_state = GameState(self.num_players)
+        self.game_num_players = len(self.players)
+
+        self.assign_player_numbers()
+
+        print("START GAME: ", self.game_num_players)
+
+        self.game_state = GameState(self.game_num_players)
 
         self.state = IN_PROGRESS
 
         for player in self.players.values():
-            
+            print(f"Player {player.name} has number {player.player_number}")
             if player.connected:
 
-                safe_send_json(player, make_game_started(self))
+                safe_send_json(player, make_game_started(self, player))
 
         self.broadcast_game_state()
 
@@ -199,13 +199,10 @@ class Session:
 
     def _handle_start_game_message(self, player, data=None):
 
-        if player.player_number != 1:
-
-            safe_send_json(player, make_error("Only the host can start the game."))
-
+        if player.player_id != self.host_player_id:
             return
 
-        if len(self.players) != self.num_players:
+        if len(self.players) != self.lobby_num_players:
 
             safe_send_json(player, make_error("Not enough players."))
 
@@ -242,12 +239,10 @@ class Session:
 
     def _handle_update_num_players(self, player, data):
 
-        if player.player_number != 1:
+        if player.player_id != self.host_player_id:
             return
 
-        new_count = data["num_players"]
-
-        self.num_players = new_count
+        self.lobby_num_players = data["num_players"]
 
         self.broadcast_lobby_state()
     

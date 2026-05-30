@@ -44,13 +44,14 @@ def make_welcome(player, session):
     }
 
 
-def make_lobby_state(session):
+def make_lobby_state(session, player):
 
     return {
         "type": LOBBY_STATE,
         "players": session.serialize_players(),
         "session_id": session.session_id,
-        "num_players": session.num_players
+        "num_players": session.lobby_num_players,
+        "is_host": session.host_player_id == player.player_id
     }
 
 
@@ -63,10 +64,11 @@ def make_partial_validation(valid, message):
     }
 
 
-def make_game_started(session):
+def make_game_started(session, player):
 
     return {
         "type": GAME_STARTED,
+        "player_number": player.player_number,
         "player_configs": session.game_state.players
     }
 
@@ -95,7 +97,7 @@ def make_session_validated(session, player_num):
     return {
         "type": SESSION_VALIDATED,
         "session_state": session.state,
-        "num_players": session.num_players,
+        "num_players": session.lobby_num_players,
         "player_num": player_num,
         "player_configs": player_configs
     }
