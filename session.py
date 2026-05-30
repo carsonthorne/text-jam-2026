@@ -45,13 +45,33 @@ class Session:
         }
 
 
-    def broadcast_game_state(self):
+    def add_player(self, player):
+        
+        self.touch()
 
-        for player in self.players.values():
+        if len(self.players) >= self.num_players:
+            return False
+        
+        self.players[player.player_id] = player
 
-            if player.connected and player.connection:
+        self.broadcast_lobby_state()
 
-                safe_send_json(player, make_game_state(self.game_state))
+        return True
+
+
+    def assign_player_number(self):
+
+        used = {
+            p.player_number
+            for p in self.players.values()
+        }
+
+        for i in range(1, self.num_players + 1):
+
+            if i not in used:
+                return i
+        
+        return None
 
 
     def get_connected_players(self):
@@ -74,42 +94,146 @@ class Session:
         return None
 
 
-    def add_player(self, player):
-        
-        self.touch()
+    def serialize_players(self):
 
-        if len(self.players) >= self.num_players:
-            return False
-        
-        self.players[player.player_id] = player
+        return [
+            {
+                "name": player.name,
+                "player_number": player.player_number,
+                "connected": player.connected,
+                "is_host": player.player_number == 1
+            }
+            for player in self.players.values()
+        ]
+    
+
+    def handle_disconnect(self, player):
+
+        player.disconnect()
 
         self.broadcast_lobby_state()
 
-        return True
+        print(
+            f"session.py: handle_disconnect(): Player {player.player_number} disconnected "
+            f"from session {self.session_id}"
+        )
+
+
+    def has_disconnected_players(self):
+
+        return any(
+            not player.connected
+            for player in self.players.values()
+        )
     
 
     def touch(self):
 
         self.last_activity = time.time()
+    
+
+    def is_abandoned(self):
+
+        now = time.time()
+
+        for player in self.players.values():
+
+            if player.connected:
+                return False
+            
+            if now - player.last_seen < RECONNECT_TIMEOUT:
+                return False
+            
+        return True
+
+
+    def broadcast_lobby_state(self):
+
+        for player in self.players.values():
+
+            if player.connected and player.connection:
+
+                safe_send_json(player, make_lobby_state(self))
+
+
+    def broadcast_game_state(self):
+
+        for player in self.players.values():
+
+            if player.connected and player.connection:
+
+                safe_send_json(player, make_game_state(self.game_state))
 
 
     def can_start(self):
         return len(self.players) == self.num_players
 
 
-    def assign_player_number(self):
+    def start_game(self):
 
-        used = {
-            p.player_number
-            for p in self.players.values()
-        }
+        self.state = IN_PROGRESS
 
-        for i in range(1, self.num_players + 1):
+        for player in self.players.values():
+            
+            if player.connected:
 
-            if i not in used:
-                return i
-        
-        return None
+                safe_send_json(player, make_game_started())
+
+        self.broadcast_game_state()
+
+
+    def handle_message(self, player, data):
+
+        message_type = data.get("type")
+
+        handler = self.message_handlers.get(message_type)
+
+        if handler:
+
+            handler(player, data)
+
+
+    def _handle_start_game_message(self, player, data=None):
+
+        if player.player_number != 1:
+
+            safe_send_json(player, make_error("Only the host can start the game."))
+
+            return
+
+        if len(self.players) != self.num_players:
+
+            safe_send_json(player, make_error("Not enough players."))
+
+            return
+
+        self.start_game()
+
+
+    def _handle_validate_partial(self, player, data):
+
+        path = [tuple(coord) for coord in data["path"]]
+
+        response = self.validate_partial_selection(
+            player,
+            path
+        )
+
+        send_json(player.connection, response)
+
+
+    def _handle_move_message(self, player, data):
+
+        path = [tuple(coord) for coord in data["path"]]
+
+        result = self.handle_move(player, path)
+
+        if not result["success"]:
+
+            send_json(
+                player.connection,
+                result["response"]
+            )
     
 
     def validate_partial_selection(self, player, path):
@@ -123,7 +247,7 @@ class Session:
             )
 
         return make_partial_validation(valid, reason)
-    
+
 
     def handle_move(self, player, path):
 
@@ -176,127 +300,3 @@ class Session:
         self.broadcast_game_state()
 
         return {"success": True}
-    
-
-    def handle_disconnect(self, player):
-
-        player.disconnect()
-
-        self.broadcast_lobby_state()
-
-        print(
-            f"session.py: handle_disconnect(): Player {player.player_number} disconnected "
-            f"from session {self.session_id}"
-        )
-
-
-    def has_disconnected_players(self):
-
-        return any(
-            not player.connected
-            for player in self.players.values()
-        )
-    
-
-    def is_abandoned(self):
-
-        now = time.time()
-
-        for player in self.players.values():
-
-            if player.connected:
-                return False
-            
-            if now - player.last_seen < RECONNECT_TIMEOUT:
-                return False
-            
-        return True
-    
-
-    def serialize_players(self):
-
-        return [
-            {
-                "name": player.name,
-                "player_number": player.player_number,
-                "connected": player.connected,
-                "is_host": player.player_number == 1
-            }
-            for player in self.players.values()
-        ]
-
-
-    def broadcast_lobby_state(self):
-
-        for player in self.players.values():
-
-            if player.connected and player.connection:
-
-                safe_send_json(player, make_lobby_state(self))
-
-
-    def start_game(self):
-
-        self.state = IN_PROGRESS
-
-        for player in self.players.values():
-            
-            if player.connected:
-
-                safe_send_json(player, make_game_started())
-
-        self.broadcast_game_state()
-
-
-    def _handle_start_game_message(self, player, data=None):
-
-        if player.player_number != 1:
-
-            safe_send_json(player, make_error("Only the host can start the game."))
-
-            return
-
-        if len(self.players) != self.num_players:
-
-            safe_send_json(player, make_error("Not enough players."))
-
-            return
-
-        self.start_game()
-
-
-    def _handle_validate_partial(self, player, data):
-
-        path = [tuple(coord) for coord in data["path"]]
-
-        response = self.validate_partial_selection(
-            player,
-            path
-        )
-
-        send_json(player.connection, response)
-
-
-    def _handle_move_message(self, player, data):
-
-        path = [tuple(coord) for coord in data["path"]]
-
-        result = self.handle_move(player, path)
-
-        if not result["success"]:
-
-            send_json(
-                player.connection,
-                result["response"]
-            )
-
-
-    def handle_message(self, player, data):
-
-        message_type = data.get("type")
-
-        handler = self.message_handlers.get(message_type)
-
-        if handler:
-
-            handler(player, data)

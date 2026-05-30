@@ -6,7 +6,6 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
-from session_states import LOBBY
 from messages import (
     make_welcome,
     make_error,
@@ -38,7 +37,6 @@ def handle_connection(manager, conn):
         return
 
     if data["type"] != CONNECT:
-        print("closing connection prematurely")
         conn.close()
         return
 
@@ -53,7 +51,6 @@ def handle_connection(manager, conn):
 
         # Session ID belongs to expired / invalid session.
         if session is None:
-            print(f"INVALID SESSION: data: {data}")
             send_json(conn, make_invalid_session())
             conn.close()
             return
@@ -63,7 +60,6 @@ def handle_connection(manager, conn):
 
         # Trying to connect to session while already connected (Duplicate player).
         if player_id in session_players:
-            print("Player is already connected to the session")
             send_json(conn, make_duplicate_player())
             conn.close()
             return
@@ -89,6 +85,7 @@ def handle_connection(manager, conn):
         player.last_seen = time.time()
         session.touch()
 
+        print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
         send_json(conn, make_reconnected())
 
@@ -109,6 +106,7 @@ def handle_connection(manager, conn):
         player = Player( player_id, player_number, data["name"], session.session_id)
         player.attach_connection(conn)
         session.add_player(player)
+        print(f"\nPlayer id: {player_id} connected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
 
     send_json(conn, make_game_state(session.game_state))
@@ -142,7 +140,7 @@ def handle_connection(manager, conn):
 
     conn.close()
 
-    print(f"Player {player.player_number} disconnected")
+    print(f"Server.py: Player {player.player_id} disconnected")
 
 
 def start_server():
@@ -159,13 +157,13 @@ def start_server():
 
     cleanup_thread.start()
 
-    print("Server started")
+    print("Server.py: Server started")
 
     while True:
 
         conn, addr = server.accept()
 
-        print(f"Server.py: start_server(): Connected: {addr}")
+        print(f"Server.py: New connection: {addr}")
 
         thread = threading.Thread(
             target=handle_connection,

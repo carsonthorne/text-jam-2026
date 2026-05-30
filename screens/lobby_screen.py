@@ -109,10 +109,9 @@ class LobbyScreen(Screen):
 
         save_identity(self.identity)
 
-        self.client.send({"type":"debug", "message":f"handle welcome: session id: {self.identity["session_id"]}"})
-
         self.player_number = data["player_number"]
 
+        # Only host can start the game
         if self.player_number != 1:
             self.start_button.disabled = True
 

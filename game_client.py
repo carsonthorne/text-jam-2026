@@ -4,7 +4,7 @@ from network import send_json, receive_json
 from message_types import CONNECT, DEBUG
 
 class GameClient:
-    
+
     def __init__(self):
         self.socket = None
         self.receive_thread = None
@@ -12,7 +12,6 @@ class GameClient:
 
         self.buffer = ""
 
-        # callback hooks (screens will attach these)
         self.on_message = None
 
         self.identity = None
@@ -80,7 +79,7 @@ class GameClient:
                     self.on_message(data)
 
             except Exception as e:
-                print("Client receive error:", e)
+                self.app.log("Client receive error:", e)
                 self.send({"type": DEBUG, "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
                 break
 
