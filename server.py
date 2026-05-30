@@ -12,7 +12,6 @@ from messages import (
     make_error,
     make_game_state,
     make_reconnected,
-    make_waiting_for_players,
     make_invalid_session,
     make_session_validated,
     make_duplicate_player
@@ -33,8 +32,6 @@ def handle_connection(manager, conn):
     buffer = ""
 
     data, buffer = receive_json(conn, buffer)
-
-    print("got data:", data, "\n")
 
     if data is None:
         conn.close()
@@ -114,10 +111,6 @@ def handle_connection(manager, conn):
         session.add_player(player)
         send_json(conn, make_welcome(player, session))
 
-
-    if session.state == LOBBY:
-        send_json(conn, make_waiting_for_players())
-
     send_json(conn, make_game_state(session.game_state))
 
     buffer = ""
@@ -166,7 +159,7 @@ def start_server():
 
     cleanup_thread.start()
 
-    print("Waiting for players...")
+    print("Server started")
 
     while True:
 

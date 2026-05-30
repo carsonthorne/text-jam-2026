@@ -9,7 +9,6 @@ from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
 from message_types import (
     WELCOME,
-    WAITING_FOR_PLAYERS,
     GAME_STATE,
     VALIDATE_PARTIAL,
     PARTIAL_VALIDATION,
@@ -45,7 +44,6 @@ class GameScreen(Screen):
 
         self.message_handlers = {
             WELCOME: self._handle_welcome,
-            WAITING_FOR_PLAYERS: self._handle_waiting,
             GAME_STATE: self._handle_game_state,
             PARTIAL_VALIDATION: self._handle_partial_validation,
             ERROR: self._handle_error,
@@ -119,15 +117,6 @@ class GameScreen(Screen):
         self.player_number = data["player_number"]
 
         self.player_configs = data["players"]
-
-
-    def _handle_waiting(self, data):
-        
-        self.client.dispatch_to_ui(
-            self.app,
-            self.log_message,
-            "[yellow]Waiting for more players...[/]"
-        )
 
 
     def _handle_game_state(self, data):

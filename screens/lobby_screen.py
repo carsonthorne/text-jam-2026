@@ -8,7 +8,6 @@ from screens.game_screen import GameScreen
 from message_types import (
     WELCOME,
     LOBBY_STATE,
-    WAITING_FOR_PLAYERS,
     GAME_STARTED,
     START_GAME
 )
@@ -30,7 +29,6 @@ class LobbyScreen(Screen):
 
         self.message_handlers = {
             WELCOME: self._handle_welcome,
-            WAITING_FOR_PLAYERS: self._handle_waiting,
             GAME_STARTED: self._handle_game_started,
             LOBBY_STATE: self._handle_lobby_state
         }
@@ -68,6 +66,7 @@ class LobbyScreen(Screen):
 
         player_lines = []
 
+        # Update player list
         for player in self.players:
 
             status = (
@@ -85,6 +84,14 @@ class LobbyScreen(Screen):
             "\n".join(player_lines)
         )
 
+        # Update status
+        if len(self.players) == self.num_players:
+            status_message = "[bold green]Ready to start game[/]"
+        elif len(self.players) < self.num_players:
+            status_message = "[yellow]Waiting for players...[/]"
+        self.status_widget.update(
+            status_message
+        )
 
     def handle_message(self, data):
 
@@ -114,15 +121,6 @@ class LobbyScreen(Screen):
         self.client.dispatch_to_ui(
             self.app,
             self.refresh_lobby
-        )
-
-
-    def _handle_waiting(self, data):
-
-        self.client.dispatch_to_ui(
-            self.app,
-            self.status_widget.update,
-            "[yellow]Waiting for players...[/]"
         )
 
 

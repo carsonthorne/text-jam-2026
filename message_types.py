@@ -1,7 +1,6 @@
 CONNECT = "connect"
 WELCOME = "welcome"
 LOBBY_STATE = "lobby_state"
-WAITING_FOR_PLAYERS = "waiting_for_players"
 GAME_STARTED = "game_started"
 GAME_STATE = "game_state"
 VALIDATE_PARTIAL = "validate_partial"

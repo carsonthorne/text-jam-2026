@@ -6,7 +6,6 @@ from message_types import (
     PARTIAL_VALIDATION,
     GAME_STARTED,
     RECONNECTED,
-    WAITING_FOR_PLAYERS,
     SESSION_VALIDATED,
     INVALID_SESSION,
     DUPLICATE_PLAYER
@@ -70,13 +69,6 @@ def make_reconnected():
 
     return {
         "type": RECONNECTED
-    }
-
-
-def make_waiting_for_players():
-
-    return {
-        "type": WAITING_FOR_PLAYERS
     }
 
 
