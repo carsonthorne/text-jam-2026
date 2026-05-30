@@ -9,7 +9,8 @@ from message_types import (
     WELCOME,
     LOBBY_STATE,
     GAME_STARTED,
-    START_GAME
+    START_GAME,
+    UPDATE_NUM_PLAYERS
 )
 
 class LobbyScreen(Screen):
@@ -21,9 +22,13 @@ class LobbyScreen(Screen):
         self.client = client
         self.identity = identity
 
+        self.player_number = None
+        self.is_host = False
+
         self.session_id = None
         self.players = []
         self.num_players = None
+        self.player_configs = None
 
         self.client.on_message = self.handle_message
 
@@ -45,6 +50,7 @@ class LobbyScreen(Screen):
                 ("6 Players", 6),
             ],
             value=2,
+            prompt="Select number of players",
             id="player_count"
         )
         self.players_widget = Static()
@@ -75,6 +81,9 @@ class LobbyScreen(Screen):
             f"[bold cyan]Lobby[/]\nSession ID: {self.session_id}"
         )
 
+        if self.num_players is not None:
+            self.player_count_select.value = self.num_players
+
         player_lines = []
 
         # Update player list
@@ -99,7 +108,9 @@ class LobbyScreen(Screen):
         if len(self.players) == self.num_players:
             status_message = "[bold green]Ready to start game[/]"
         elif len(self.players) < self.num_players:
-            status_message = "[yellow]Waiting for players...[/]"
+            status_message = "[bold yellow]Waiting for players...[/]"
+        elif len(self.players) > self.num_players:
+            status_message = "[bold red]Too many players...[/]"
         self.status_widget.update(
             status_message
         )
@@ -122,9 +133,12 @@ class LobbyScreen(Screen):
 
         self.player_number = data["player_number"]
 
+        self.is_host = (self.player_number == 1)
+
         # Only host can start the game
-        if self.player_number != 1:
+        if not self.is_host:
             self.start_button.disabled = True
+            self.player_count_select.disabled = True
 
         self.player_configs = data["players"]
 
@@ -135,6 +149,8 @@ class LobbyScreen(Screen):
 
 
     def _handle_game_started(self, data):
+
+        self.player_configs = data["player_configs"]
 
         self.client.dispatch_to_ui(
             self.app,
@@ -185,4 +201,10 @@ class LobbyScreen(Screen):
 
         if event.select.id == "player_count":
 
-            self.app.client.send({"type": "debug", "message":f"Selected player count: {event.value}"})
+            if event.value is Select.NULL:
+                return
+
+            self.client.send({
+                "type": UPDATE_NUM_PLAYERS,
+                "num_players": event.value
+            })

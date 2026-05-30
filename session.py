@@ -16,7 +16,8 @@ from message_types import (
     ERROR,
     VALIDATE_PARTIAL,
     MOVE,
-    START_GAME
+    START_GAME,
+    UPDATE_NUM_PLAYERS
 )
 
 RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
@@ -29,7 +30,7 @@ class Session:
 
         self.players = {}
 
-        self.game_state = GameState(num_players)
+        self.game_state = None
 
         self.lock = threading.Lock()
 
@@ -41,7 +42,8 @@ class Session:
         self.message_handlers = {
             VALIDATE_PARTIAL: self._handle_validate_partial,
             MOVE: self._handle_move_message,
-            START_GAME: self._handle_start_game_message
+            START_GAME: self._handle_start_game_message,
+            UPDATE_NUM_PLAYERS: self._handle_update_num_players
         }
 
 
@@ -171,13 +173,15 @@ class Session:
 
     def start_game(self):
 
+        self.game_state = GameState(self.num_players)
+
         self.state = IN_PROGRESS
 
         for player in self.players.values():
             
             if player.connected:
 
-                safe_send_json(player, make_game_started())
+                safe_send_json(player, make_game_started(self))
 
         self.broadcast_game_state()
 
@@ -234,6 +238,18 @@ class Session:
                 player.connection,
                 result["response"]
             )
+
+
+    def _handle_update_num_players(self, player, data):
+
+        if player.player_number != 1:
+            return
+
+        new_count = data["num_players"]
+
+        self.num_players = new_count
+
+        self.broadcast_lobby_state()
     
 
     def validate_partial_selection(self, player, path):

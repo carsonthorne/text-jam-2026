@@ -32,12 +32,7 @@ class MainMenuScreen(Screen):
         yield Vertical(
             Static("[bold cyan]Chinese Checkers[/]"),
 
-            # TODO change to dropdown menu instead of multiple buttons
-            Button("Create 2 Player Session", id="create_2"),
-            Button("Create 3 Player Session", id="create_3"),
-            Button("Create 4 Player Session", id="create_4"),
-            Button("Create 6 Player Session", id="create_6"),
-
+            Button("Create Session", id="create"),
             Button("Join Session", id="join"),
             Button("Rules", id="rules"),
             Button("Controls", id="controls"),
@@ -128,11 +123,9 @@ class MainMenuScreen(Screen):
 
             self.app.exit()
 
-        elif button_id.startswith("create_"):
+        elif button_id == "create":
 
-            num_players = int(button_id.split("_")[1])
-
-            self.create_session(num_players)
+            self.create_session(2)
         
         elif button_id == "join":
 

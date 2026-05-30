@@ -92,13 +92,9 @@ def handle_connection(manager, conn):
 
     # New player connecting to session
     else:
-        if len(session.players) >= session.num_players:
-            send_json(conn, make_error("Session is full."))
-            conn.close()
-            return
-
         player_number = session.assign_player_number()
         if player_number is None:
+            print("SERVER: FAILED TO ASSIGN NUMBER")
             send_json(conn, make_error("Session is full."))
             conn.close()
             return
@@ -108,8 +104,6 @@ def handle_connection(manager, conn):
         session.add_player(player)
         print(f"\nPlayer id: {player_id} connected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
-
-    send_json(conn, make_game_state(session.game_state))
 
     buffer = ""
 

@@ -31,10 +31,15 @@ def make_game_state(game_state):
 
 def make_welcome(player, session):
 
+    player_configs = []
+
+    if session.game_state:
+        player_configs = session.game_state.players
+
     return {
         "type": WELCOME,
         "player_number": player.player_number,
-        "players": session.game_state.players,
+        "players": player_configs,
         "session_id": session.session_id
     }
 
@@ -58,10 +63,11 @@ def make_partial_validation(valid, message):
     }
 
 
-def make_game_started():
+def make_game_started(session):
 
     return {
-        "type": GAME_STARTED
+        "type": GAME_STARTED,
+        "player_configs": session.game_state.players
     }
 
 
@@ -81,12 +87,17 @@ def make_invalid_session():
 
 def make_session_validated(session, player_num):
 
+    player_configs = []
+
+    if session.game_state:
+        player_configs = session.game_state.players
+
     return {
         "type": SESSION_VALIDATED,
         "session_state": session.state,
         "num_players": session.num_players,
         "player_num": player_num,
-        "player_configs": session.game_state.players
+        "player_configs": player_configs
     }
 
 
