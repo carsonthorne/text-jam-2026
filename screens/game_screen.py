@@ -3,6 +3,7 @@ from textual.app import ComposeResult
 from textual.widgets import Static, RichLog
 from textual.containers import Horizontal
 from textual.events import Key
+from rich.text import Text
 
 from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
@@ -13,7 +14,8 @@ from message_types import (
     PARTIAL_VALIDATION,
     MOVE,
     ERROR,
-    RECONNECTED
+    RECONNECTED,
+    PLAYER_JOINED_GAME
 )
 
 
@@ -45,7 +47,8 @@ class GameScreen(Screen):
             GAME_STATE: self._handle_game_state,
             PARTIAL_VALIDATION: self._handle_partial_validation,
             ERROR: self._handle_error,
-            RECONNECTED: self._handle_reconnect
+            RECONNECTED: self._handle_reconnect,
+            PLAYER_JOINED_GAME: self._handle_player_joined_game
         }
 
 
@@ -154,7 +157,35 @@ class GameScreen(Screen):
             self.log_message,
             "[green]Reconnected to game.[/]"
         )
-    
+
+    def _handle_player_joined_game(self, data):
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self.show_player_joined,
+            data["player_name"],
+            data["player_number"]
+        )
+
+
+    def show_player_joined(self, player_name, player_number):
+
+        config = next(
+            (
+                config
+                for config in self.player_configs
+                if config["player"] == player_number
+            ),
+            None
+        )
+
+        if config is None:
+            return
+
+        message = Text(player_name, style=str(config["piece"]))
+        message.append(" has joined the game!", style="white")
+        self.message_log.write(message)
+
 
     def update_game_state(self, new_board, current_player, winner):
 
@@ -201,7 +232,7 @@ class GameScreen(Screen):
         
             self.log_message("[bold yellow]Your turn![/]")
 
-        elif not self.my_turn and was_my_turn:
+        elif not self.my_turn:
 
             self.log_message("[cyan]Waiting for opponent...[/]")
 

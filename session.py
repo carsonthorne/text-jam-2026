@@ -10,7 +10,8 @@ from messages import (
     make_lobby_state,
     make_error,
     make_partial_validation,
-    make_game_started
+    make_game_started,
+    make_player_joined_game
 )
 from message_types import (
     ERROR,
@@ -211,6 +212,10 @@ class Session:
             if player.connected:
 
                 safe_send_json(player, make_game_started(self, player))
+
+                for joined_player in self.players.values():
+
+                    safe_send_json(player, make_player_joined_game(joined_player))
 
         self.broadcast_game_state()
 

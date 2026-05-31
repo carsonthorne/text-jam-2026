@@ -8,7 +8,8 @@ from message_types import (
     RECONNECTED,
     SESSION_VALIDATED,
     INVALID_SESSION,
-    DUPLICATE_PLAYER
+    DUPLICATE_PLAYER,
+    PLAYER_JOINED_GAME
 )
 
 def make_error(message):
@@ -70,6 +71,15 @@ def make_game_started(session, player):
         "type": GAME_STARTED,
         "player_number": player.player_number,
         "player_configs": session.game_state.players
+    }
+
+
+def make_player_joined_game(player):
+
+    return {
+        "type": PLAYER_JOINED_GAME,
+        "player_name": player.name,
+        "player_number": player.player_number
     }
 
 
