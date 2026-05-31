@@ -10,7 +10,8 @@ from message_types import (
     LOBBY_STATE,
     GAME_STARTED,
     START_GAME,
-    UPDATE_NUM_PLAYERS
+    UPDATE_NUM_PLAYERS,
+    LEAVE_LOBBY
 )
 
 class LobbyScreen(Screen):
@@ -56,7 +57,7 @@ class LobbyScreen(Screen):
         self.players_widget = Static()
         self.status_widget = Static()
         self.start_button = Button("Start Game", id="start_game")
-        self.back_button = Button("Back to Main Menu", id="back")
+        self.back_button = Button("Leave Lobby", id="leave_lobby")
 
         yield Vertical(
             self.title_widget,
@@ -89,6 +90,11 @@ class LobbyScreen(Screen):
         # Update player list
         for player in self.players:
 
+            name = player["name"]
+
+            if player["is_host"]:
+                name += "[grey] (host)[/]"
+
             status = (
                 "[green](connected)[/]"
                 if player["connected"]
@@ -97,7 +103,7 @@ class LobbyScreen(Screen):
 
             player_lines.append(
                 f"Player {player['player_number']}: "
-                f"{player['name']} {status}"
+                f"{name} {status}"
             )
 
         self.players_widget.update(
@@ -117,6 +123,10 @@ class LobbyScreen(Screen):
         self.status_widget.update(
             status_message
         )
+
+        # Update dropdown if player has become the new host
+        if self.is_host and self.player_count_select.disabled:
+            self.player_count_select.disabled = False
 
         # Update start button
         if self.is_host and len(self.players) == self.num_players and self.start_button.disabled:
@@ -205,7 +215,17 @@ class LobbyScreen(Screen):
                 "type": START_GAME
             })
 
-        if event.button.id == "back":
+        if event.button.id == "leave_lobby":
+
+            self.client.send({
+                "type": LEAVE_LOBBY
+            })
+
+            self.identity["session_id"] = None
+
+            save_identity(self.identity)
+
+            self.client.close()
 
             self.app.pop_screen()
 

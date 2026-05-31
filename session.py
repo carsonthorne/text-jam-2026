@@ -17,7 +17,8 @@ from message_types import (
     VALIDATE_PARTIAL,
     MOVE,
     START_GAME,
-    UPDATE_NUM_PLAYERS
+    UPDATE_NUM_PLAYERS,
+    LEAVE_LOBBY
 )
 
 RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
@@ -47,7 +48,8 @@ class Session:
             VALIDATE_PARTIAL: self._handle_validate_partial,
             MOVE: self._handle_move_message,
             START_GAME: self._handle_start_game_message,
-            UPDATE_NUM_PLAYERS: self._handle_update_num_players
+            UPDATE_NUM_PLAYERS: self._handle_update_num_players,
+            LEAVE_LOBBY: self._handle_leave_lobby
         }
 
 
@@ -63,6 +65,33 @@ class Session:
         self.broadcast_lobby_state()
 
         return True
+
+
+    def remove_player(self, player):
+
+        if player.player_id not in self.players:
+            return
+
+        was_host = player.player_id == self.host_player_id
+
+        del self.players[player.player_id]
+
+        if was_host:
+
+            self.host_player_id = None
+
+            if self.players:
+
+                self.host_player_id = next(
+                    iter(self.players.values())
+                ).player_id
+
+        self.broadcast_lobby_state()
+
+        print(
+            f"Player {player.player_id} left session "
+            f"{self.session_id}"
+        )
 
 
     def assign_player_numbers(self):
@@ -245,6 +274,23 @@ class Session:
         self.lobby_num_players = data["num_players"]
 
         self.broadcast_lobby_state()
+
+
+    def _handle_leave_lobby(self, player, data):
+
+        if self.state != LOBBY:
+            return
+
+        self.remove_player(player)
+
+        player.disconnect()
+
+        if player.connection:
+
+            try:
+                player.connection.close()
+            except:
+                pass
     
 
     def validate_partial_selection(self, player, path):

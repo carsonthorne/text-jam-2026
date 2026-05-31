@@ -17,7 +17,8 @@ from messages import (
 )
 from message_types import (
     CONNECT,
-    DEBUG
+    DEBUG,
+    LEAVE_LOBBY
 )
 
 HOST = "127.0.0.1"
@@ -101,7 +102,7 @@ def handle_connection(manager, conn):
         send_json(conn, make_welcome(player, session))
 
     buffer = ""
-
+    player_left_lobby = False
 
     # Receive message loop
     while True:
@@ -118,6 +119,10 @@ def handle_connection(manager, conn):
                 
                 continue
 
+            if data["type"] == LEAVE_LOBBY:
+
+                player_left_lobby = True
+
             session.handle_message(player, data)
 
         except Exception as e:
@@ -125,7 +130,8 @@ def handle_connection(manager, conn):
             traceback.print_exc()
             break
 
-    session.handle_disconnect(player)
+    if not player_left_lobby:
+        session.handle_disconnect(player)
 
     conn.close()
 
