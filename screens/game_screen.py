@@ -8,7 +8,6 @@ from board_renderer import BoardRenderer
 from board_layout import ZONE_CURSOR_STARTS
 from geometry import DIRECTIONS
 from message_types import (
-    WELCOME,
     GAME_STATE,
     VALIDATE_PARTIAL,
     PARTIAL_VALIDATION,
@@ -43,7 +42,6 @@ class GameScreen(Screen):
         self.client.on_message = self.handle_message
 
         self.message_handlers = {
-            WELCOME: self._handle_welcome,
             GAME_STATE: self._handle_game_state,
             PARTIAL_VALIDATION: self._handle_partial_validation,
             ERROR: self._handle_error,
@@ -72,7 +70,6 @@ class GameScreen(Screen):
 
     def on_mount(self):
 
-        self.app.log("game screen log test", self.player_configs)
         self.refresh_board()
 
         self.set_interval(0.08, self.animate_cursor)
@@ -110,13 +107,6 @@ class GameScreen(Screen):
 
         if handler:
             handler(data)
-
-
-    def _handle_welcome(self, data):
-
-        self.player_number = data["player_number"]
-
-        self.player_configs = data["players"]
 
 
     def _handle_game_state(self, data):

@@ -93,8 +93,6 @@ def handle_connection(manager, conn):
 
     # New player connecting to session
     else:
-        
-
         player = Player( player_id, data["name"], session.session_id)
         player.attach_connection(conn)
         session.add_player(player)

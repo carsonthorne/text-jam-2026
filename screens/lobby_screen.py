@@ -111,14 +111,19 @@ class LobbyScreen(Screen):
         )
 
         # Update status
-        if len(self.players) == self.num_players:
+        connected_players = sum(
+            1 for player in self.players
+            if player["connected"]
+        )
+
+        if connected_players == self.num_players:
             if self.is_host:
                 status_message = "[bold green]Ready to start game[/]"
             else:
                 status_message = "[bold green]Waiting for host to start game[/]"
-        elif len(self.players) < self.num_players:
+        elif connected_players < self.num_players:
             status_message = "[bold yellow]Waiting for players...[/]"
-        elif len(self.players) > self.num_players:
+        elif connected_players > self.num_players:
             status_message = "[bold red]Too many players...[/]"
         self.status_widget.update(
             status_message
@@ -129,10 +134,13 @@ class LobbyScreen(Screen):
             self.player_count_select.disabled = False
 
         # Update start button
-        if self.is_host and len(self.players) == self.num_players and self.start_button.disabled:
-                    self.start_button.disabled = False
-        elif not self.start_button.disabled:
-            self.start_button.disabled = True
+        can_start = (
+            self.is_host
+            and connected_players == self.num_players
+        )
+
+        self.start_button.disabled = not can_start
+
 
     def handle_message(self, data):
 
