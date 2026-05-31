@@ -118,6 +118,12 @@ class LobbyScreen(Screen):
             status_message
         )
 
+        # Update start button
+        if self.is_host and len(self.players) == self.num_players and self.start_button.disabled:
+                    self.start_button.disabled = False
+        elif not self.start_button.disabled:
+            self.start_button.disabled = True
+
     def handle_message(self, data):
 
         handler = self.message_handlers.get(data["type"])
