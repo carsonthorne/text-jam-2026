@@ -1,7 +1,7 @@
-from board_initializer import create_initial_board
-from geometry import get_zone_for_coord, is_adjacent_move, is_jump_move
-from player_configs import PLAYER_CONFIGS
-from win_checker import check_winner
+from game.board_initializer import create_initial_board
+from ui.geometry import get_zone_for_coord, is_adjacent_move, is_jump_move
+from game.player_configs import PLAYER_CONFIGS
+from game.win_checker import check_winner
 
 class GameState:
 

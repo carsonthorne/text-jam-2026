@@ -5,7 +5,7 @@ from textual.containers import Vertical
 
 import uuid
 
-from local_identity import save_identity
+from client.local_identity import save_identity
 
 class IdentityScreen(Screen):
 

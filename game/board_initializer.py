@@ -1,4 +1,4 @@
-from board_layout import VALID_COORDS, HOME_ZONES
+from ui.board_layout import VALID_COORDS, HOME_ZONES
 
 def create_initial_board(players):
 

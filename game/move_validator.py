@@ -1,4 +1,4 @@
-from geometry import is_adjacent_move, is_jump_move, get_zone_for_coord
+from ui.geometry import is_adjacent_move, is_jump_move, get_zone_for_coord
 
 def validate_partial_move(board, player_number, path):
 

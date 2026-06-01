@@ -1,4 +1,4 @@
-from message_types import (
+from shared.message_types import (
     GAME_STATE,
     ERROR,
     WELCOME,

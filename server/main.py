@@ -3,11 +3,11 @@ import threading
 import traceback
 import time
 
-from player import Player
-from session_manager import SessionManager
-from network import send_json, receive_json
-from config import SERVER_HOST, SERVER_PORT, PROTOCOL_VERSION
-from messages import (
+from game.player import Player
+from server.session_manager import SessionManager
+from shared.network import send_json, receive_json
+from shared.settings import SERVER_HOST, SERVER_PORT, PROTOCOL_VERSION
+from shared.messages import (
     make_welcome,
     make_error,
     make_reconnected,
@@ -15,7 +15,7 @@ from messages import (
     make_session_validated,
     make_duplicate_player
 )
-from message_types import (
+from shared.message_types import (
     CONNECT,
     DEBUG,
     LEAVE_LOBBY

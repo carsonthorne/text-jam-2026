@@ -1,4 +1,4 @@
-from board_layout import HOME_ZONES
+from ui.board_layout import HOME_ZONES
 
 def check_winner(board, players, player_number):
 

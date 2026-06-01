@@ -1,4 +1,4 @@
-from theme import COLORS
+from ui.theme import COLORS
 
 PLAYER_CONFIGS = {
     2: [

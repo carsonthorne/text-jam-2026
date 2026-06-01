@@ -1,7 +1,7 @@
 import uuid
 import threading
 
-from session import Session
+from server.session import Session
 
 class SessionManager:
 

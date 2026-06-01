@@ -1,8 +1,8 @@
 import socket
 import threading
-from network import send_json, receive_json
-from message_types import CONNECT, DEBUG
-from config import PROTOCOL_VERSION
+from shared.network import send_json, receive_json
+from shared.message_types import CONNECT, DEBUG
+from shared.settings import PROTOCOL_VERSION
 
 class GameClient:
 

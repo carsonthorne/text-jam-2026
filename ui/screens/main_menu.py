@@ -3,13 +3,13 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Static
 from textual.containers import Vertical
 
-from screens.game_screen import GameScreen
-from screens.lobby_screen import LobbyScreen
-from screens.identity_screen import IdentityScreen
-from screens.join_session_screen import JoinSessionScreen
-from local_identity import save_identity, load_identity, clear_identity
-from message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
-from config import SERVER_HOST, SERVER_PORT
+from ui.screens.game_screen import GameScreen
+from ui.screens.lobby_screen import LobbyScreen
+from ui.screens.identity_screen import IdentityScreen
+from ui.screens.join_session_screen import JoinSessionScreen
+from client.local_identity import save_identity, load_identity, clear_identity
+from shared.message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
+from shared.settings import SERVER_HOST, SERVER_PORT
 
 class MainMenuScreen(Screen):
 
