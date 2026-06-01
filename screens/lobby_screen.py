@@ -32,6 +32,7 @@ class LobbyScreen(Screen):
         self.player_configs = None
 
         self.client.on_message = self.handle_message
+        self.client.on_disconnect = self.handle_disconnect
 
         self.message_handlers = {
             WELCOME: self._handle_welcome,
@@ -140,6 +141,11 @@ class LobbyScreen(Screen):
         )
 
         self.start_button.disabled = not can_start
+
+
+    def handle_disconnect(self):
+
+        self.status_widget.update("[bold red]Connection to server lost.[/]")
 
 
     def handle_message(self, data):

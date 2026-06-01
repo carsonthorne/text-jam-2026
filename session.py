@@ -191,10 +191,6 @@ class Session:
                 safe_send_json(player, make_game_state(self.game_state))
 
 
-    def can_start(self):
-        return len(self.players) == self.num_players
-
-
     def start_game(self):
 
         self.game_num_players = len(self.players)

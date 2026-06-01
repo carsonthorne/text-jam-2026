@@ -1,5 +1,7 @@
 import json
 
+MAX_MESSAGE_SIZE = 8192
+
 def send_json(conn, data):
 
     message = json.dumps(data) + "\n"
@@ -17,6 +19,10 @@ def receive_json(conn, buffer):
             return None, buffer
         
         buffer += chunk
+
+        if len(buffer) > MAX_MESSAGE_SIZE:
+
+            raise ValueError("Message exceeds maximum size")
 
     line, buffer = buffer.split("\n", 1)
 

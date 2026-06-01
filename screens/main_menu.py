@@ -9,9 +9,7 @@ from screens.identity_screen import IdentityScreen
 from screens.join_session_screen import JoinSessionScreen
 from local_identity import save_identity, load_identity, clear_identity
 from message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
-
-HOST = "127.0.0.1"
-PORT = 5555
+from config import SERVER_HOST, SERVER_PORT
 
 class MainMenuScreen(Screen):
 
@@ -54,8 +52,8 @@ class MainMenuScreen(Screen):
                 try:
 
                     self.app.client.connect_to_session(
-                        HOST,
-                        PORT,
+                        SERVER_HOST,
+                        SERVER_PORT,
                         identity,
                         session_id=identity["session_id"],
                     )
@@ -156,8 +154,8 @@ class MainMenuScreen(Screen):
             return
 
         client.connect_to_session(
-            HOST,
-            PORT,
+            SERVER_HOST,
+            SERVER_PORT,
             identity,
             session_id=None,
             num_players=num_players

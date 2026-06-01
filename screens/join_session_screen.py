@@ -4,9 +4,7 @@ from textual.widgets import Button, Static, Input
 from textual.containers import Vertical
 
 from screens.lobby_screen import LobbyScreen
-
-HOST = "127.0.0.1"
-PORT = 5555
+from config import SERVER_HOST, SERVER_PORT
 
 class JoinSessionScreen(Screen):
 
@@ -39,8 +37,8 @@ class JoinSessionScreen(Screen):
             identity = client.identity
 
             client.connect_to_session(
-                HOST,
-                PORT,
+                SERVER_HOST,
+                SERVER_PORT,
                 identity,
                 session_id=session_id
             )

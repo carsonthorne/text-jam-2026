@@ -42,6 +42,8 @@ class GameScreen(Screen):
         self.tick = 0
 
         self.client.on_message = self.handle_message
+        self.client.on_disconnect = self.handle_disconnect
+
 
         self.message_handlers = {
             GAME_STATE: self._handle_game_state,
@@ -103,6 +105,9 @@ class GameScreen(Screen):
 
         self.refresh_board()
 
+    def handle_disconnect(self):
+
+        self.log_message("[bold red]Connection to server lost...[/]")
 
     def handle_message(self, data):
 

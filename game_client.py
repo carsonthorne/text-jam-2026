@@ -2,6 +2,7 @@ import socket
 import threading
 from network import send_json, receive_json
 from message_types import CONNECT, DEBUG
+from config import PROTOCOL_VERSION
 
 class GameClient:
 
@@ -13,6 +14,7 @@ class GameClient:
         self.buffer = ""
 
         self.on_message = None
+        self.on_disconnect = None
 
         self.identity = None
 
@@ -49,6 +51,7 @@ class GameClient:
 
         self.send({
             "type": CONNECT,
+            "protocol_version": PROTOCOL_VERSION,
             "player_id": identity["player_id"],
             "session_id": session_id,
             "name": identity["name"],
@@ -57,7 +60,35 @@ class GameClient:
 
 
     def send(self, data):
-        send_json(self.socket, data)
+
+        if not self.socket:
+            return False
+
+        try:
+
+            send_json(self.socket, data)
+
+            return True
+
+        except (
+            BrokenPipeError,
+            ConnectionResetError,
+            OSError
+        ):
+
+            self.running = False
+
+            try:
+                self.socket.close()
+            except:
+                pass
+
+            self.socket = None
+
+            if self.on_disconnect:
+                self.on_disconnect()
+
+            return False
 
 
     def close(self):
@@ -79,7 +110,6 @@ class GameClient:
                     self.on_message(data)
 
             except Exception as e:
-                self.app.log("Client receive error:", e)
                 self.send({"type": DEBUG, "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
                 break
 

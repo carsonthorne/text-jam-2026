@@ -6,10 +6,10 @@ import time
 from player import Player
 from session_manager import SessionManager
 from network import send_json, receive_json
+from config import SERVER_HOST, SERVER_PORT, PROTOCOL_VERSION
 from messages import (
     make_welcome,
     make_error,
-    make_game_state,
     make_reconnected,
     make_invalid_session,
     make_session_validated,
@@ -20,10 +20,6 @@ from message_types import (
     DEBUG,
     LEAVE_LOBBY
 )
-
-HOST = "127.0.0.1"
-PORT = 5555
-
 
 manager = SessionManager()
 
@@ -38,6 +34,20 @@ def handle_connection(manager, conn):
         return
 
     if data["type"] != CONNECT:
+        conn.close()
+        return
+    
+    client_version = data.get("protocol_version")
+
+    if client_version != PROTOCOL_VERSION:
+
+        send_json(
+            conn,
+            make_error(
+                "Client version mismatch."
+            )
+        )
+
         conn.close()
         return
 
@@ -123,6 +133,10 @@ def handle_connection(manager, conn):
 
             session.handle_message(player, data)
 
+        except ValueError as e:
+            print("\nClient sent invalid/oversized message:", e)
+            break
+
         except Exception as e:
             print("\nError: server receive loop:", e)
             traceback.print_exc()
@@ -140,7 +154,7 @@ def start_server():
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((HOST, PORT))
+    server.bind((SERVER_HOST, SERVER_PORT))
     server.listen()
 
     cleanup_thread = threading.Thread(
@@ -152,18 +166,30 @@ def start_server():
 
     print("Server.py: Server started")
 
-    while True:
+    try:
 
-        conn, addr = server.accept()
+        while True:
 
-        print(f"Server.py: New connection: {addr}")
+            conn, addr = server.accept()
 
-        thread = threading.Thread(
-            target=handle_connection,
-            args=(manager, conn)
-        )
+            print(f"Server.py: New connection: {addr}")
 
-        thread.start()
+            thread = threading.Thread(
+                target=handle_connection,
+                args=(manager, conn)
+            )
+
+            thread.start()
+
+    except KeyboardInterrupt:
+
+        print("\nShutting down server...")
+
+    finally:
+
+        server.close()
+
+        print("server closed.")
 
 
 def cleanup_loop():
