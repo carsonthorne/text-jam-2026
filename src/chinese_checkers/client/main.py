@@ -1,7 +1,7 @@
 from textual.app import App
 
-from ui.screens.main_menu import MainMenuScreen
-from client.game_client import GameClient
+from chinese_checkers.ui.screens.main_menu import MainMenuScreen
+from chinese_checkers.client.game_client import GameClient
 
 
 class ChineseCheckersApp(App):
@@ -14,6 +14,12 @@ class ChineseCheckersApp(App):
 
         self.client = GameClient()
         self.push_screen(MainMenuScreen())
+
+
+def main():
+    app = ChineseCheckersApp()
+    app.run()
+
 
 if __name__ == "__main__":
     app = ChineseCheckersApp()

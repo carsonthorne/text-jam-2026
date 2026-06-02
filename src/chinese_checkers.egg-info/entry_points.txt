@@ -1,0 +1,3 @@
+[console_scripts]
+chinese-checkers = chinese_checkers.client.main:main
+chinese-checkers-server = chinese_checkers.server.main:main

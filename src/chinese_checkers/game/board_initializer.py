@@ -1,4 +1,4 @@
-from ui.board_layout import VALID_COORDS, HOME_ZONES
+from chinese_checkers.ui.board_layout import VALID_COORDS, HOME_ZONES
 
 def create_initial_board(players):
 

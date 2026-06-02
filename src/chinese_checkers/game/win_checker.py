@@ -1,4 +1,4 @@
-from ui.board_layout import HOME_ZONES
+from chinese_checkers.ui.board_layout import HOME_ZONES
 
 def check_winner(board, players, player_number):
 

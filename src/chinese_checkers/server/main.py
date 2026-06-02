@@ -3,11 +3,11 @@ import threading
 import traceback
 import time
 
-from game.player import Player
-from server.session_manager import SessionManager
-from shared.network import send_json, receive_json
-from shared.settings import SERVER_HOST, SERVER_PORT, PROTOCOL_VERSION
-from shared.messages import (
+from chinese_checkers.game.player import Player
+from chinese_checkers.server.session_manager import SessionManager
+from chinese_checkers.shared.network import send_json, receive_json
+from chinese_checkers.shared.settings import SERVER_HOST, SERVER_PORT, PROTOCOL_VERSION
+from chinese_checkers.shared.messages import (
     make_welcome,
     make_error,
     make_reconnected,
@@ -15,7 +15,7 @@ from shared.messages import (
     make_session_validated,
     make_duplicate_player
 )
-from shared.message_types import (
+from chinese_checkers.shared.message_types import (
     CONNECT,
     DEBUG,
     LEAVE_LOBBY
@@ -199,6 +199,11 @@ def cleanup_loop():
         manager.cleanup_sessions()
 
         time.sleep(10)
+
+
+def main():
+    start_server()
+
 
 if __name__ == "__main__":
     start_server()

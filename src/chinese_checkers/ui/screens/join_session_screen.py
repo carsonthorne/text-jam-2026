@@ -3,8 +3,8 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Static, Input
 from textual.containers import Vertical
 
-from ui.screens.lobby_screen import LobbyScreen
-from shared.settings import SERVER_HOST, SERVER_PORT
+from chinese_checkers.ui.screens.lobby_screen import LobbyScreen
+from chinese_checkers.shared.settings import SERVER_HOST, SERVER_PORT
 
 class JoinSessionScreen(Screen):
 

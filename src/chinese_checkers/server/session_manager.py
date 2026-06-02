@@ -1,7 +1,7 @@
 import uuid
 import threading
 
-from server.session import Session
+from chinese_checkers.server.session import Session
 
 class SessionManager:
 

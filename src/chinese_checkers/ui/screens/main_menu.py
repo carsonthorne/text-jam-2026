@@ -3,13 +3,13 @@ from textual.app import ComposeResult
 from textual.widgets import Button, Static
 from textual.containers import Vertical
 
-from ui.screens.game_screen import GameScreen
-from ui.screens.lobby_screen import LobbyScreen
-from ui.screens.identity_screen import IdentityScreen
-from ui.screens.join_session_screen import JoinSessionScreen
-from client.local_identity import save_identity, load_identity, clear_identity
-from shared.message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
-from shared.settings import SERVER_HOST, SERVER_PORT
+from chinese_checkers.ui.screens.game_screen import GameScreen
+from chinese_checkers.ui.screens.lobby_screen import LobbyScreen
+from chinese_checkers.ui.screens.identity_screen import IdentityScreen
+from chinese_checkers.ui.screens.join_session_screen import JoinSessionScreen
+from chinese_checkers.client.local_identity import save_identity, load_identity, clear_identity
+from chinese_checkers.shared.message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
+from chinese_checkers.shared.settings import SERVER_HOST, SERVER_PORT
 
 class MainMenuScreen(Screen):
 

@@ -1,8 +1,8 @@
 import socket
 import threading
-from shared.network import send_json, receive_json
-from shared.message_types import CONNECT, DEBUG
-from shared.settings import PROTOCOL_VERSION
+from chinese_checkers.shared.network import send_json, receive_json
+from chinese_checkers.shared.message_types import CONNECT, DEBUG
+from chinese_checkers.shared.settings import PROTOCOL_VERSION
 
 class GameClient:
 

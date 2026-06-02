@@ -1,4 +1,4 @@
-from ui.theme import COLORS
+from chinese_checkers.ui.theme import COLORS
 
 PLAYER_CONFIGS = {
     2: [

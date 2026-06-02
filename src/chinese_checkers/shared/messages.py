@@ -1,4 +1,4 @@
-from shared.message_types import (
+from chinese_checkers.shared.message_types import (
     GAME_STATE,
     ERROR,
     WELCOME,

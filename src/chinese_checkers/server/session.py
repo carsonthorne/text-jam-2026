@@ -1,11 +1,11 @@
 import threading
 import time
 
-from game.game_state import GameState
-from shared.network import send_json, safe_send_json
-from game.move_validator import validate_partial_move, validate_move
-from server.session_states import LOBBY, IN_PROGRESS
-from shared.messages import (
+from chinese_checkers.game.game_state import GameState
+from chinese_checkers.shared.network import send_json, safe_send_json
+from chinese_checkers.game.move_validator import validate_partial_move, validate_move
+from chinese_checkers.server.session_states import LOBBY, IN_PROGRESS
+from chinese_checkers.shared.messages import (
     make_game_state,
     make_lobby_state,
     make_error,
@@ -13,7 +13,7 @@ from shared.messages import (
     make_game_started,
     make_player_joined_game
 )
-from shared.message_types import (
+from chinese_checkers.shared.message_types import (
     ERROR,
     VALIDATE_PARTIAL,
     MOVE,

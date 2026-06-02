@@ -5,10 +5,10 @@ from textual.containers import Horizontal
 from textual.events import Key
 from rich.text import Text
 
-from ui.board_renderer import BoardRenderer
-from ui.board_layout import ZONE_CURSOR_STARTS
-from ui.geometry import DIRECTIONS
-from shared.message_types import (
+from chinese_checkers.ui.board_renderer import BoardRenderer
+from chinese_checkers.ui.board_layout import ZONE_CURSOR_STARTS
+from chinese_checkers.ui.geometry import DIRECTIONS
+from chinese_checkers.shared.message_types import (
     GAME_STATE,
     VALIDATE_PARTIAL,
     PARTIAL_VALIDATION,

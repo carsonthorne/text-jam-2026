@@ -2,9 +2,9 @@ import math
 from rich.text import Text
 from rich.style import Style
 
-from ui.board_layout import ROWS
-from ui.theme import COLORS, CURSOR_PULSE_GREYS
-from ui.geometry import get_zone_for_coord
+from chinese_checkers.ui.board_layout import ROWS
+from chinese_checkers.ui.theme import COLORS, CURSOR_PULSE_GREYS
+from chinese_checkers.ui.geometry import get_zone_for_coord
 
 class BoardRenderer:
 

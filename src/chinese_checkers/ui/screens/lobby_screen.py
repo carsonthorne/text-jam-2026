@@ -3,9 +3,9 @@ from textual.app import ComposeResult
 from textual.widgets import Static, Button, Select
 from textual.containers import Vertical
 
-from client.local_identity import save_identity
-from ui.screens.game_screen import GameScreen
-from shared.message_types import (
+from chinese_checkers.client.local_identity import save_identity
+from chinese_checkers.ui.screens.game_screen import GameScreen
+from chinese_checkers.shared.message_types import (
     WELCOME,
     LOBBY_STATE,
     GAME_STARTED,
