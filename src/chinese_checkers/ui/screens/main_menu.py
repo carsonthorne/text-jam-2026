@@ -9,7 +9,7 @@ from chinese_checkers.ui.screens.identity_screen import IdentityScreen
 from chinese_checkers.ui.screens.join_session_screen import JoinSessionScreen
 from chinese_checkers.client.local_identity import save_identity, load_identity, clear_identity
 from chinese_checkers.shared.message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
-from chinese_checkers.shared.settings import SERVER_HOST, SERVER_PORT
+from chinese_checkers.shared.settings import PUBLIC_SERVER_HOST, SERVER_PORT
 
 class MainMenuScreen(Screen):
 
@@ -52,7 +52,7 @@ class MainMenuScreen(Screen):
                 try:
 
                     self.app.client.connect_to_session(
-                        SERVER_HOST,
+                        PUBLIC_SERVER_HOST,
                         SERVER_PORT,
                         identity,
                         session_id=identity["session_id"],
@@ -154,7 +154,7 @@ class MainMenuScreen(Screen):
             return
 
         client.connect_to_session(
-            SERVER_HOST,
+            PUBLIC_SERVER_HOST,
             SERVER_PORT,
             identity,
             session_id=None,

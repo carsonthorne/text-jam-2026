@@ -1,3 +1,4 @@
-SERVER_HOST = "0.0.0.0"
+PUBLIC_SERVER_HOST = "chinesecheckers.webhob.me"
+LISTEN_HOST = "0.0.0.0"
 SERVER_PORT = 5555
 PROTOCOL_VERSION = 1
