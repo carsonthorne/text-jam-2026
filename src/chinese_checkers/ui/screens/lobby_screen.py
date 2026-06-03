@@ -178,6 +178,8 @@ class LobbyScreen(Screen):
             self.refresh_lobby
         )
 
+        self.client.start_heartbeat()
+
 
     def _handle_game_started(self, data):
 

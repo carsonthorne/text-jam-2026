@@ -11,7 +11,9 @@ class GameClient:
         self.socket = None
         self.receive_thread = None
         self.heartbeat_thread = None
+
         self.running = False
+        self.heartbeat_started = False
 
         self.buffer = ""
 
@@ -59,13 +61,6 @@ class GameClient:
             "name": identity["name"],
             "num_players": num_players
         })
-
-        self.heartbeat_thread = threading.Thread(
-            target=self._heartbeat_loop,
-            daemon=True
-        )
-        self.heartbeat_thread.start()
-
 
 
     def send(self, data):
@@ -137,6 +132,21 @@ class GameClient:
             self.send({
                 "type": HEARTBEAT
             })
+
+
+    def start_heartbeat(self):
+
+        if self.heartbeat_started:
+            return
+
+        self.heartbeat_started = True
+
+        self.heartbeat_thread = threading.Thread(
+            target=self._heartbeat_loop,
+            daemon=True
+        )
+
+        self.heartbeat_thread.start()
 
 
     def dispatch_to_ui(self, app, callback, *args):
