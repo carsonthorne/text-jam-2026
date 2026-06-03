@@ -129,10 +129,13 @@ class GameClient:
             if not self.running:
                 break
 
-            self.send({
+            success = self.send({
                 "type": HEARTBEAT
             })
 
+            if not success:
+                break
+            
 
     def start_heartbeat(self):
 

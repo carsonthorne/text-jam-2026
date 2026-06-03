@@ -13,7 +13,9 @@ from chinese_checkers.shared.messages import (
     make_reconnected,
     make_invalid_session,
     make_session_validated,
-    make_duplicate_player
+    make_duplicate_player,
+    make_game_state,
+    make_lobby_state
 )
 from chinese_checkers.shared.message_types import (
     CONNECT,
@@ -100,6 +102,11 @@ def handle_connection(manager, conn):
         print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
         send_json(conn, make_reconnected())
+
+        if session.game_state:
+            send_json(conn, make_game_state(session.game_state))
+        else:
+            send_json(conn, make_lobby_state(session, player))
 
 
     # New player connecting to session
