@@ -131,6 +131,8 @@ def handle_connection(manager, conn):
 
             if data["type"] == HEARTBEAT:
 
+                print(f"Heartbeat from {player.player_id}")
+
                 player.last_seen = time.time()
 
                 continue

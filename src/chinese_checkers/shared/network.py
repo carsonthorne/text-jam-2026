@@ -13,7 +13,10 @@ def receive_json(conn, buffer):
     
     while "\n" not in buffer:
 
-        chunk = conn.recv(1024).decode()
+        try:
+            chunk = conn.recv(1024).decode("utf-8")
+        except UnicodeDecodeError:
+            raise ValueError("Invalid UTF-8 received")
 
         if not chunk:
             return None, buffer
@@ -26,7 +29,10 @@ def receive_json(conn, buffer):
 
     line, buffer = buffer.split("\n", 1)
 
-    return json.loads(line), buffer
+    try:
+        return json.loads(line), buffer
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON received")
 
 
 def safe_send_json(player, data):
