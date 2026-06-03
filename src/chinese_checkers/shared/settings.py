@@ -1,4 +1,5 @@
-PUBLIC_SERVER_HOST = "chinesecheckers.webhob.me"
+PUBLIC_SERVER_HOST = "chinesecheckers.webhop.me"
+# PUBLIC_SERVER_HOST = "192.168.2.56"
 LISTEN_HOST = "0.0.0.0"
 SERVER_PORT = 5555
 PROTOCOL_VERSION = 1
