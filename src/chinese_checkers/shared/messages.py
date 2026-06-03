@@ -9,7 +9,8 @@ from chinese_checkers.shared.message_types import (
     SESSION_VALIDATED,
     INVALID_SESSION,
     DUPLICATE_PLAYER,
-    PLAYER_JOINED_GAME
+    PLAYER_JOINED_GAME,
+    HEARTBEAT
 )
 
 def make_error(message):

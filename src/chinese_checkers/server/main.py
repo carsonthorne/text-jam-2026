@@ -18,7 +18,8 @@ from chinese_checkers.shared.messages import (
 from chinese_checkers.shared.message_types import (
     CONNECT,
     DEBUG,
-    LEAVE_LOBBY
+    LEAVE_LOBBY,
+    HEARTBEAT
 )
 
 manager = SessionManager()
@@ -105,6 +106,7 @@ def handle_connection(manager, conn):
     else:
         player = Player( player_id, data["name"], session.session_id)
         player.attach_connection(conn)
+        player.last_seen = time.time()
         session.add_player(player)
         print(f"\nPlayer id: {player_id} connected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
@@ -125,6 +127,14 @@ def handle_connection(manager, conn):
                 
                 print("DEBUG: ", data["message"])
                 
+                continue
+
+            if data["type"] == HEARTBEAT:
+
+                print(f"Heartbeat from {player.player_id}")
+
+                player.last_seen = time.time()
+
                 continue
 
             if data["type"] == LEAVE_LOBBY:
