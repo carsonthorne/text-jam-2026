@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 from chinese_checkers.shared.network import send_json, receive_json
 from chinese_checkers.shared.message_types import CONNECT, DEBUG, HEARTBEAT
 from chinese_checkers.shared.settings import PROTOCOL_VERSION, HEARTBEAT_INTERVAL
@@ -38,12 +39,6 @@ class GameClient:
         )
         self.receive_thread.start()
 
-        self.heartbeat_thread = threading.Thread(
-            target=self._heartbeat_loop,
-            daemon=True
-        )
-        self.heartbeat_thread.start()
-
 
     def connect_to_session(
         self,
@@ -64,6 +59,13 @@ class GameClient:
             "name": identity["name"],
             "num_players": num_players
         })
+
+        self.heartbeat_thread = threading.Thread(
+            target=self._heartbeat_loop,
+            daemon=True
+        )
+        self.heartbeat_thread.start()
+
 
 
     def send(self, data):
@@ -127,13 +129,14 @@ class GameClient:
 
         while self.running:
 
+            time.sleep(HEARTBEAT_INTERVAL)
+
+            if not self.running:
+                break
+
             self.send({
                 "type": HEARTBEAT
             })
-
-            threading.Event().wait(
-                HEARTBEAT_INTERVAL
-            )
 
 
     def dispatch_to_ui(self, app, callback, *args):
