@@ -3,14 +3,13 @@ import threading
 import time
 from chinese_checkers.shared.network import send_json, receive_json
 from chinese_checkers.shared.message_types import CONNECT, DEBUG, SERVER_HEARTBEAT
-from chinese_checkers.shared.settings import PROTOCOL_VERSION, HEARTBEAT_INTERVAL, SERVER_TIMEOUT
+from chinese_checkers.shared.settings import PROTOCOL_VERSION, SERVER_TIMEOUT
 
 class GameClient:
 
     def __init__(self):
         self.socket = None
         self.receive_thread = None
-        self.heartbeat_thread = None
         self.watchdog_thread = None
 
         self.running = False

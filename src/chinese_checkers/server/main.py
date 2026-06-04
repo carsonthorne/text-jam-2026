@@ -14,15 +14,12 @@ from chinese_checkers.shared.messages import (
     make_invalid_session,
     make_session_validated,
     make_duplicate_player,
-    make_game_state,
-    make_lobby_state,
     make_server_heartbeat
 )
 from chinese_checkers.shared.message_types import (
     CONNECT,
     DEBUG,
     LEAVE_LOBBY,
-    SERVER_HEARTBEAT
 )
 
 manager = SessionManager()
@@ -111,18 +108,15 @@ def handle_connection(manager, conn):
 
         player = session.players[player_id]
         player.attach_connection(conn)
-        session.broadcast_lobby_state() # TODO Improve reconnect broadcast?
+        session.broadcast_session_state()
+
         player.last_seen = time.time()
         session.touch()
 
         print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
-        send_json(conn, make_welcome(player, session))
-        send_json(conn, make_reconnected(player)) #TODO  Only sends message to reconnected player
-
-        if session.game_state:
-            send_json(conn, make_game_state(session.game_state))
-        else:
-            send_json(conn, make_lobby_state(session, player))
+        
+        send_json(conn, make_welcome(player, session)) # Only necessary if game in lobby
+        send_json(conn, make_reconnected(player)) # Only necessary if session in progress
 
 
     # New player connecting to session
@@ -150,14 +144,6 @@ def handle_connection(manager, conn):
                 
                 print("DEBUG: ", data["message"])
                 
-                continue
-
-            if data["type"] == SERVER_HEARTBEAT:
-
-                print(f"Heartbeat from {player.player_id}")
-
-                player.last_seen = time.time()
-
                 continue
 
             if data["type"] == LEAVE_LOBBY:

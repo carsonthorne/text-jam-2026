@@ -64,7 +64,7 @@ class Session:
 
         self.players[player.player_id] = player
 
-        self.broadcast_lobby_state()
+        self.broadcast_session_state()
 
         return True
 
@@ -88,7 +88,7 @@ class Session:
                     iter(self.players.values())
                 ).player_id
 
-        self.broadcast_lobby_state()
+        self.broadcast_session_state()
 
         print(
             f"Player {player.player_id} left session "
@@ -147,16 +147,14 @@ class Session:
                     make_reconnected(player)
                 )
         print("should be broadcasting session state")
-        self.broadcast_lobby_state()
-        self.broadcast_game_state()
-
+        self.broadcast_session_state()
 
 
     def handle_disconnect(self, player):
 
         player.disconnect()
 
-        self.broadcast_lobby_state()
+        self.broadcast_session_state()
 
         print(
             f"session.py: handle_disconnect(): Player {player.player_number} disconnected "
@@ -191,11 +189,15 @@ class Session:
             
         return True
 
+    def broadcast_session_state(self):
+
+        if self.state is LOBBY:
+            self.broadcast_lobby_state()
+        elif self.state is IN_PROGRESS:
+            self.broadcast_game_state()
+
 
     def broadcast_lobby_state(self):
-
-        if self.state is not LOBBY:
-            return
 
         print("broadcasting lobby state")
         for player in self.players.values():
@@ -207,8 +209,6 @@ class Session:
 
     def broadcast_game_state(self):
 
-        if self.state is not IN_PROGRESS:
-            return
         print("broadcasting game state")
         for player in self.players.values():
 
@@ -239,7 +239,7 @@ class Session:
 
                     safe_send_json(player, make_player_joined_game(joined_player))
 
-        self.broadcast_game_state()
+        self.broadcast_session_state()
 
 
     def handle_message(self, player, data):
@@ -300,7 +300,7 @@ class Session:
 
         self.lobby_num_players = data["num_players"]
 
-        self.broadcast_lobby_state()
+        self.broadcast_session_state()
 
 
     def _handle_leave_lobby(self, player, data):
@@ -381,6 +381,6 @@ class Session:
 
         self.touch()
 
-        self.broadcast_game_state()
+        self.broadcast_session_state()
 
         return {"success": True}
