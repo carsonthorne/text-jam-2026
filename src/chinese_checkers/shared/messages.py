@@ -10,7 +10,7 @@ from chinese_checkers.shared.message_types import (
     INVALID_SESSION,
     DUPLICATE_PLAYER,
     PLAYER_JOINED_GAME,
-    HEARTBEAT
+    SERVER_HEARTBEAT
 )
 
 def make_error(message):
@@ -84,10 +84,19 @@ def make_player_joined_game(player):
     }
 
 
-def make_reconnected():
+def make_reconnected(player):
 
     return {
-        "type": RECONNECTED
+        "type": RECONNECTED,
+        "player_name": player.name,
+        "player_number": player.player_number
+    }
+
+
+def make_server_heartbeat():
+    
+    return {
+        "type": SERVER_HEARTBEAT
     }
 
 

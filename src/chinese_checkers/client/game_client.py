@@ -2,8 +2,8 @@ import socket
 import threading
 import time
 from chinese_checkers.shared.network import send_json, receive_json
-from chinese_checkers.shared.message_types import CONNECT, DEBUG, HEARTBEAT
-from chinese_checkers.shared.settings import PROTOCOL_VERSION, HEARTBEAT_INTERVAL
+from chinese_checkers.shared.message_types import CONNECT, DEBUG, SERVER_HEARTBEAT
+from chinese_checkers.shared.settings import PROTOCOL_VERSION, HEARTBEAT_INTERVAL, SERVER_TIMEOUT
 
 class GameClient:
 
@@ -11,14 +11,16 @@ class GameClient:
         self.socket = None
         self.receive_thread = None
         self.heartbeat_thread = None
+        self.watchdog_thread = None
 
         self.running = False
-        self.heartbeat_started = False
+        self.last_server_heartbeat = None
 
         self.buffer = ""
 
         self.on_message = None
         self.on_disconnect = None
+        self.log_message = None
 
         self.identity = None
 
@@ -34,12 +36,19 @@ class GameClient:
         self.buffer = ""
 
         self.running = True
+        self.last_server_heartbeat = time.time()
 
         self.receive_thread = threading.Thread(
             target=self._receive_loop,
             daemon=True
         )
         self.receive_thread.start()
+
+        self.watchdog_thread = threading.Thread(
+            target=self.connection_watchdog,
+            daemon=True
+        )
+        self.watchdog_thread.start()
 
 
     def connect_to_session(
@@ -80,17 +89,7 @@ class GameClient:
             OSError
         ):
 
-            self.running = False
-
-            try:
-                self.socket.close()
-            except:
-                pass
-
-            self.socket = None
-
-            if self.on_disconnect:
-                self.on_disconnect()
+            self._handle_disconnect
 
             return False
 
@@ -107,49 +106,57 @@ class GameClient:
                 data, self.buffer = receive_json(self.socket, self.buffer)
 
                 if data is None:
-                    break
+                    self._handle_disconnect()
+                    return
+                
+                if data["type"] == SERVER_HEARTBEAT:
+                    self.last_server_heartbeat = time.time()
+                    continue
 
                 if self.on_message:
-
                     self.on_message(data)
 
             except Exception as e:
                 self.send({"type": DEBUG, "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
-                break
 
+                self._handle_disconnect
+                return
+                
         self.running = False
 
 
-    def _heartbeat_loop(self):
+    def connection_watchdog(self):
 
         while self.running:
 
-            time.sleep(HEARTBEAT_INTERVAL)
+            time.sleep(5)
 
-            if not self.running:
+            if time.time() - self.last_server_heartbeat > SERVER_TIMEOUT:
+
+                if self.log_message:
+                    self.log_message("GAME_CLIENT.PY: HAVEN'T HEARD FROM SERVER IN 30 SECONDS")
+
+                self._handle_disconnect()
+
                 break
 
-            success = self.send({
-                "type": HEARTBEAT
-            })
 
-            if not success:
-                break
-            
+    def _handle_disconnect(self):
 
-    def start_heartbeat(self):
-
-        if self.heartbeat_started:
+        if not self.running:
             return
 
-        self.heartbeat_started = True
+        self.running = False
 
-        self.heartbeat_thread = threading.Thread(
-            target=self._heartbeat_loop,
-            daemon=True
-        )
+        try:
+            self.socket.close()
+        except:
+            pass
 
-        self.heartbeat_thread.start()
+        self.socket = None
+
+        if self.on_disconnect:
+            self.on_disconnect()
 
 
     def dispatch_to_ui(self, app, callback, *args):

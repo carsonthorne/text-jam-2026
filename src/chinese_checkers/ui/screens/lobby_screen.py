@@ -1,6 +1,6 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Static, Button, Select
+from textual.widgets import Static, Button, Select, RichLog
 from textual.containers import Vertical
 
 from chinese_checkers.client.local_identity import save_identity
@@ -33,6 +33,8 @@ class LobbyScreen(Screen):
 
         self.client.on_message = self.handle_message
         self.client.on_disconnect = self.handle_disconnect
+        self.client.log_message = self.log_message
+
 
         self.message_handlers = {
             WELCOME: self._handle_welcome,
@@ -60,13 +62,21 @@ class LobbyScreen(Screen):
         self.start_button = Button("Start Game", id="start_game")
         self.back_button = Button("Leave Lobby", id="leave_lobby")
 
+        self.message_log = RichLog(
+            highlight=True,
+            markup=True,
+            wrap=True
+        )
+
         yield Vertical(
             self.title_widget,
             self.player_count_select,
             self.players_widget,
             self.status_widget,
             self.start_button,
-            self.back_button
+            self.back_button,
+            self.message_log
+
         )
 
 
@@ -75,6 +85,11 @@ class LobbyScreen(Screen):
         # self.refresh_lobby()
         if self.session_id and self.players:
             self.refresh_lobby()
+
+
+    def log_message(self, message):
+
+            self.message_log.write(message)
 
 
     def refresh_lobby(self):
@@ -102,10 +117,7 @@ class LobbyScreen(Screen):
                 else "[red](disconnected)[/]"
             )
 
-            player_lines.append(
-                f"Player {player['player_number']}: "
-                f"{name} {status}"
-            )
+            player_lines.append(f"{name} {status}")
 
         self.players_widget.update(
             "\n".join(player_lines)
@@ -177,8 +189,6 @@ class LobbyScreen(Screen):
             self.app,
             self.refresh_lobby
         )
-
-        self.client.start_heartbeat()
 
 
     def _handle_game_started(self, data):

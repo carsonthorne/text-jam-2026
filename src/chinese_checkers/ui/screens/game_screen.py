@@ -43,6 +43,7 @@ class GameScreen(Screen):
 
         self.client.on_message = self.handle_message
         self.client.on_disconnect = self.handle_disconnect
+        self.client.log_message = self.log_message
 
 
         self.message_handlers = {
@@ -107,6 +108,12 @@ class GameScreen(Screen):
 
     def handle_disconnect(self):
 
+        # self.client.dispatch_to_ui(
+        #     self.app,
+        #     self.log_message,
+        #     "[bold red]Connection to server lost...[/]"
+        # )
+
         self.log_message("[bold red]Connection to server lost...[/]")
 
     def handle_message(self, data):
@@ -157,10 +164,12 @@ class GameScreen(Screen):
     
     def _handle_reconnect(self, data):
     
+        player_name = data["player_name"]
+
         self.client.dispatch_to_ui(
             self.app,
             self.log_message,
-            "[green]Reconnected to game.[/]"
+            f"[green]{player_name} reconnected to the game.[/]"
         )
 
     def _handle_player_joined_game(self, data):

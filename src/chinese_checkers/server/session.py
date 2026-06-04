@@ -11,7 +11,8 @@ from chinese_checkers.shared.messages import (
     make_error,
     make_partial_validation,
     make_game_started,
-    make_player_joined_game
+    make_player_joined_game,
+    make_reconnected
 )
 from chinese_checkers.shared.message_types import (
     ERROR,
@@ -133,6 +134,24 @@ class Session:
         ]
     
 
+    def handle_reconnect(self, player):
+
+        for other_player in self.players.values():
+
+            if (
+                other_player.connected
+                and other_player.connection
+            ):
+                safe_send_json(
+                    other_player,
+                    make_reconnected(player)
+                )
+        print("should be broadcasting session state")
+        self.broadcast_lobby_state()
+        self.broadcast_game_state()
+
+
+
     def handle_disconnect(self, player):
 
         player.disconnect()
@@ -175,6 +194,10 @@ class Session:
 
     def broadcast_lobby_state(self):
 
+        if self.state is not LOBBY:
+            return
+
+        print("broadcasting lobby state")
         for player in self.players.values():
 
             if player.connected and player.connection:
@@ -184,6 +207,9 @@ class Session:
 
     def broadcast_game_state(self):
 
+        if self.state is not IN_PROGRESS:
+            return
+        print("broadcasting game state")
         for player in self.players.values():
 
             if player.connected and player.connection:

@@ -5,8 +5,8 @@ import time
 
 from chinese_checkers.game.player import Player
 from chinese_checkers.server.session_manager import SessionManager
-from chinese_checkers.shared.network import send_json, receive_json
-from chinese_checkers.shared.settings import LISTEN_HOST, SERVER_PORT, PROTOCOL_VERSION
+from chinese_checkers.shared.network import send_json, receive_json, safe_send_json
+from chinese_checkers.shared.settings import LISTEN_HOST, SERVER_PORT, PROTOCOL_VERSION, HEARTBEAT_INTERVAL
 from chinese_checkers.shared.messages import (
     make_welcome,
     make_error,
@@ -15,13 +15,14 @@ from chinese_checkers.shared.messages import (
     make_session_validated,
     make_duplicate_player,
     make_game_state,
-    make_lobby_state
+    make_lobby_state,
+    make_server_heartbeat
 )
 from chinese_checkers.shared.message_types import (
     CONNECT,
     DEBUG,
     LEAVE_LOBBY,
-    HEARTBEAT
+    SERVER_HEARTBEAT
 )
 
 manager = SessionManager()
@@ -30,13 +31,28 @@ def handle_connection(manager, conn):
 
     buffer = ""
 
-    data, buffer = receive_json(conn, buffer)
+    try:
+
+        data, buffer = receive_json(conn, buffer)
+
+    except ValueError as e:
+
+        print(f"Rejected connection: {e}")
+
+        conn.close()
+
+        return
+    except (
+        ConnectionResetError,
+        OSError
+    ):
+        conn.close()
 
     if data is None:
         conn.close()
         return
 
-    if data["type"] != CONNECT:
+    if data.get("type") != CONNECT:
         conn.close()
         return
     
@@ -95,13 +111,13 @@ def handle_connection(manager, conn):
 
         player = session.players[player_id]
         player.attach_connection(conn)
-        session.broadcast_lobby_state()
+        session.broadcast_lobby_state() # TODO Improve reconnect broadcast?
         player.last_seen = time.time()
         session.touch()
 
         print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
         send_json(conn, make_welcome(player, session))
-        send_json(conn, make_reconnected())
+        send_json(conn, make_reconnected(player)) #TODO  Only sends message to reconnected player
 
         if session.game_state:
             send_json(conn, make_game_state(session.game_state))
@@ -136,7 +152,7 @@ def handle_connection(manager, conn):
                 
                 continue
 
-            if data["type"] == HEARTBEAT:
+            if data["type"] == SERVER_HEARTBEAT:
 
                 print(f"Heartbeat from {player.player_id}")
 
@@ -179,6 +195,13 @@ def start_server():
         daemon=True
     )
 
+    heartbeat_thread = threading.Thread(
+        target=heartbeat_loop,
+        daemon=True
+    )
+
+    heartbeat_thread.start()
+
     cleanup_thread.start()
 
     print("Server.py: Server started")
@@ -207,6 +230,22 @@ def start_server():
         server.close()
 
         print("server closed.")
+
+
+def heartbeat_loop():
+
+    while True:
+
+        time.sleep(HEARTBEAT_INTERVAL)
+
+        with manager.lock:
+            sessions = list(manager.sessions.values())
+
+        for session in sessions:
+            for player in session.players.values():
+
+                if (player.connected and player.connection):
+                    safe_send_json(player, make_server_heartbeat())
 
 
 def cleanup_loop():
