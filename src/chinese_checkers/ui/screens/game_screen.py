@@ -14,8 +14,9 @@ from chinese_checkers.shared.message_types import (
     PARTIAL_VALIDATION,
     MOVE,
     ERROR,
-    RECONNECTED,
-    PLAYER_JOINED_GAME
+    PLAYER_RECONNECTED,
+    PLAYER_JOINED_GAME,
+    PLAYER_DISCONNECTED
 )
 
 
@@ -50,7 +51,8 @@ class GameScreen(Screen):
             GAME_STATE: self._handle_game_state,
             PARTIAL_VALIDATION: self._handle_partial_validation,
             ERROR: self._handle_error,
-            RECONNECTED: self._handle_reconnect,
+            PLAYER_RECONNECTED: self._handle_player_reconnect,
+            PLAYER_DISCONNECTED: self._handle_player_disconnect,
             PLAYER_JOINED_GAME: self._handle_player_joined_game
         }
 
@@ -162,7 +164,7 @@ class GameScreen(Screen):
         )
 
     
-    def _handle_reconnect(self, data):
+    def _handle_player_reconnect(self, data):
     
         player_name = data["player_name"]
 
@@ -171,6 +173,18 @@ class GameScreen(Screen):
             self.log_message,
             f"[green]{player_name} reconnected to the game.[/]"
         )
+
+
+    def _handle_player_disconnect(self, data):
+        
+        player_name = data["player_name"]
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self.log_message,
+            f"[green]{player_name} disconnected from the game.[/]"
+        )
+
 
     def _handle_player_joined_game(self, data):
 

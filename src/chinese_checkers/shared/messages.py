@@ -5,7 +5,8 @@ from chinese_checkers.shared.message_types import (
     LOBBY_STATE,
     PARTIAL_VALIDATION,
     GAME_STARTED,
-    RECONNECTED,
+    PLAYER_RECONNECTED,
+    PLAYER_DISCONNECTED,
     SESSION_VALIDATED,
     INVALID_SESSION,
     DUPLICATE_PLAYER,
@@ -84,10 +85,19 @@ def make_player_joined_game(player):
     }
 
 
-def make_reconnected(player):
+def make_player_reconnected(player):
 
     return {
-        "type": RECONNECTED,
+        "type": PLAYER_RECONNECTED,
+        "player_name": player.name,
+        "player_number": player.player_number
+    }
+
+
+def make_player_disconnected(player):
+    
+    return {
+        "type": PLAYER_DISCONNECTED,
         "player_name": player.name,
         "player_number": player.player_number
     }

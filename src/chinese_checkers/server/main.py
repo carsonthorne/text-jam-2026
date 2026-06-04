@@ -10,7 +10,7 @@ from chinese_checkers.shared.settings import LISTEN_HOST, SERVER_PORT, PROTOCOL_
 from chinese_checkers.shared.messages import (
     make_welcome,
     make_error,
-    make_reconnected,
+    make_player_reconnected,
     make_invalid_session,
     make_session_validated,
     make_duplicate_player,
@@ -116,8 +116,9 @@ def handle_connection(manager, conn):
         print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
         
         send_json(conn, make_welcome(player, session)) # Only necessary if game in lobby
-        send_json(conn, make_reconnected(player)) # Only necessary if session in progress
+        send_json(conn, make_player_reconnected(player)) # Only necessary if session in progress
 
+        session.handle_reconnect(player)
 
     # New player connecting to session
     else:
@@ -161,12 +162,13 @@ def handle_connection(manager, conn):
             traceback.print_exc()
             break
 
-    if not player_left_lobby:
+    if player_left_lobby:
+        print(f"Server.py: Player {player.player_id} left the lobby")
+    else:
         session.handle_disconnect(player)
+        print(f"Server.py: Player {player.player_id} disconnected")
 
     conn.close()
-
-    print(f"Server.py: Player {player.player_id} disconnected")
 
 
 def start_server():
