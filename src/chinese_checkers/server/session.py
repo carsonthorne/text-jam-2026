@@ -13,7 +13,8 @@ from chinese_checkers.shared.messages import (
     make_game_started,
     make_player_joined_game,
     make_player_reconnected,
-    make_player_disconnected
+    make_player_disconnected,
+    make_welcome
 )
 from chinese_checkers.shared.message_types import (
     ERROR,
@@ -137,7 +138,15 @@ class Session:
 
     def handle_reconnect(self, player):
 
-        self.broadcast_to_game(make_player_reconnected(player))
+        if self.state == LOBBY:
+
+            self.broadcast_session_state()
+            safe_send_json(player, make_welcome(player, self))
+
+
+        elif self.state == IN_PROGRESS:
+
+            self.broadcast_to_game(make_player_reconnected(player))
 
 
     def handle_disconnect(self, player):

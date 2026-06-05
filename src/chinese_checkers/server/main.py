@@ -108,17 +108,13 @@ def handle_connection(manager, conn):
 
         player = session.players[player_id]
         player.attach_connection(conn)
-        session.broadcast_session_state()
 
         player.last_seen = time.time()
         session.touch()
 
-        print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
-        
-        send_json(conn, make_welcome(player, session)) # Only necessary if game in lobby
-        send_json(conn, make_player_reconnected(player)) # Only necessary if session in progress
-
         session.handle_reconnect(player)
+        print(f"\nPlayer id {player_id} reconnected to Session id: {session.session_id}")
+
 
     # New player connecting to session
     else:
