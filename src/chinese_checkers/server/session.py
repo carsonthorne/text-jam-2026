@@ -84,11 +84,7 @@ class Session:
 
             self.host_player_id = None
 
-            if self.players:
-
-                self.host_player_id = next(
-                    iter(self.players.values())
-                ).player_id
+            self.assign_new_host()
 
         self.broadcast_session_state()
 
@@ -96,6 +92,17 @@ class Session:
             f"Player {player.player_id} left session "
             f"{self.session_id}"
         )
+
+
+    def assign_new_host(self):
+
+        for player in self.players.values():
+
+            if player.connected:
+                self.host_player_id = player.player_id
+                return
+
+        self.host_player_id = None
 
 
     def assign_player_numbers(self):
@@ -138,6 +145,9 @@ class Session:
 
     def handle_reconnect(self, player):
 
+        if self.host_player_id is None:
+            self.host_player_id = player.player_id
+
         if self.state == LOBBY:
 
             self.broadcast_session_state()
@@ -153,6 +163,9 @@ class Session:
 
         player.disconnect()
 
+        if (self.state == LOBBY and player.player_id == self.host_player_id):
+            self.assign_new_host()
+
         self.broadcast_session_state()
 
         if self.state == IN_PROGRESS:
@@ -164,10 +177,10 @@ class Session:
         )
 
 
-    def has_disconnected_players(self):
+    def all_players_connected(self):
 
-        return any(
-            not player.connected
+        return all(
+            player.connected
             for player in self.players.values()
         )
     
@@ -270,10 +283,10 @@ class Session:
         if player.player_id != self.host_player_id:
             return
 
-        if len(self.players) != self.lobby_num_players:
-
-            safe_send_json(player, make_error("Not enough players."))
-
+        if (
+            len(self.players) != self.lobby_num_players
+            or not self.all_players_connected()
+        ):
             return
 
         self.start_game()

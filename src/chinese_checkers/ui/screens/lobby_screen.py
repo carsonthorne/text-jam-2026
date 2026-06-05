@@ -129,12 +129,17 @@ class LobbyScreen(Screen):
             if player["connected"]
         )
 
-        if connected_players == self.num_players:
+        all_connected = all(
+            player["connected"]
+            for player in self.players
+        )
+
+        if (connected_players == self.num_players and all_connected):
             if self.is_host:
                 status_message = "[bold green]Ready to start game[/]"
             else:
                 status_message = "[bold green]Waiting for host to start game[/]"
-        elif connected_players < self.num_players:
+        elif (connected_players < self.num_players or not all_connected):
             status_message = "[bold yellow]Waiting for players...[/]"
         elif connected_players > self.num_players:
             status_message = "[bold red]Too many players...[/]"
@@ -150,6 +155,7 @@ class LobbyScreen(Screen):
         can_start = (
             self.is_host
             and connected_players == self.num_players
+            and all_connected
         )
 
         self.start_button.disabled = not can_start
