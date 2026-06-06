@@ -22,7 +22,8 @@ from chinese_checkers.shared.message_types import (
     MOVE,
     START_GAME,
     UPDATE_NUM_PLAYERS,
-    LEAVE_LOBBY
+    LEAVE_LOBBY,
+    KICK_PLAYER
 )
 
 RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
@@ -53,7 +54,8 @@ class Session:
             MOVE: self._handle_move_message,
             START_GAME: self._handle_start_game_message,
             UPDATE_NUM_PLAYERS: self._handle_update_num_players,
-            LEAVE_LOBBY: self._handle_leave_lobby
+            LEAVE_LOBBY: self._handle_leave_lobby,
+            KICK_PLAYER: self._handle_kick_player
         }
 
 
@@ -134,6 +136,7 @@ class Session:
 
         return [
             {
+                "player_id": player.player_id,
                 "name": player.name,
                 "player_number": player.player_number,
                 "connected": player.connected,
@@ -344,6 +347,35 @@ class Session:
             except:
                 pass
     
+
+    def _handle_kick_player(self, player, data):
+
+        if self.state != LOBBY:
+            return
+
+        if player.player_id != self.host_player_id:
+            return
+
+        target_id = data["player_id"]
+
+        if target_id == self.host_player_id:
+            return
+
+        target = self.players.get(target_id)
+
+        if not target:
+            return
+
+        self.remove_player(target)
+
+        target.disconnect()
+
+        if target.connection:
+            try:
+                target.connection.close()
+            except:
+                pass
+
 
     def validate_partial_selection(self, player, path):
 

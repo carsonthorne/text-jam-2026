@@ -41,6 +41,7 @@ def make_welcome(player, session):
 
     return {
         "type": WELCOME,
+        "player_id": player.player_id,
         "player_number": player.player_number,
         "players": player_configs,
         "session_id": session.session_id

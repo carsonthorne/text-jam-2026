@@ -1,7 +1,8 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
+from textual.widget import Widget
 from textual.widgets import Static, Button, Select, RichLog
-from textual.containers import Vertical
+from textual.containers import Vertical, Horizontal
 
 from chinese_checkers.client.local_identity import save_identity
 from chinese_checkers.ui.screens.game_screen import GameScreen
@@ -11,10 +12,17 @@ from chinese_checkers.shared.message_types import (
     GAME_STARTED,
     START_GAME,
     UPDATE_NUM_PLAYERS,
-    LEAVE_LOBBY
+    LEAVE_LOBBY,
+    KICK_PLAYER
 )
 
 class LobbyScreen(Screen):
+
+    DEFAULT_CSS = """
+    #player_list {
+    height: auto;
+    }
+    """
 
     def __init__(self, client, identity):
 
@@ -57,7 +65,7 @@ class LobbyScreen(Screen):
             prompt="Select number of players",
             id="player_count"
         )
-        self.players_widget = Static()
+        self.players_widget = Vertical(id = "player_list")
         self.status_widget = Static()
         self.start_button = Button("Start Game", id="start_game")
         self.back_button = Button("Leave Lobby", id="leave_lobby")
@@ -101,27 +109,7 @@ class LobbyScreen(Screen):
         if self.num_players is not None:
             self.player_count_select.value = self.num_players
 
-        player_lines = []
-
-        # Update player list
-        for player in self.players:
-
-            name = player["name"]
-
-            if player["is_host"]:
-                name += "[grey] (host)[/]"
-
-            status = (
-                "[green](connected)[/]"
-                if player["connected"]
-                else "[red](disconnected)[/]"
-            )
-
-            player_lines.append(f"{name} {status}")
-
-        self.players_widget.update(
-            "\n".join(player_lines)
-        )
+        self.call_after_refresh(self.rebuild_player_list)
 
         # Update status
         connected_players = sum(
@@ -161,6 +149,27 @@ class LobbyScreen(Screen):
         self.start_button.disabled = not can_start
 
 
+    def rebuild_player_list(self):
+
+        self.log_message(f"Rebuilding player list: {len(self.players)}")
+
+        self.players_widget.remove_children()
+        self.players_widget.refresh(layout=True)
+
+        for player in self.players:
+
+            self.log_message(f"{self.is_host}, {player['name']}, show_kick={self.is_host and player['player_id'] != self.identity['player_id']}"
+            )
+
+            self.players_widget.mount(
+                PlayerRow(
+                    player,
+                    self.is_host,
+                    self.identity["player_id"]
+                )
+            )
+
+
     def handle_disconnect(self):
 
         self.status_widget.update("[bold red]Connection to server lost.[/]")
@@ -177,6 +186,8 @@ class LobbyScreen(Screen):
     def _handle_welcome(self, data):
 
         self.session_id = data["session_id"]
+
+        self.identity["player_id"] = data.get("player_id")
 
         self.identity["session_id"] = data["session_id"]
 
@@ -247,6 +258,17 @@ class LobbyScreen(Screen):
                 "type": START_GAME
             })
 
+        if event.button.id.startswith("kick_"):
+
+            player_id = event.button.id.removeprefix("kick_")
+
+            self.client.send({
+                "type": KICK_PLAYER,
+                "player_id": player_id
+            })
+
+            return
+
         if event.button.id == "leave_lobby":
 
             self.client.send({
@@ -273,3 +295,72 @@ class LobbyScreen(Screen):
                 "type": UPDATE_NUM_PLAYERS,
                 "num_players": event.value
             })
+
+class PlayerRow(Horizontal):
+
+    DEFAULT_CSS = """
+    PlayerRow {
+        layout: horizontal;
+        width: 100%;
+        height: auto;
+    }
+
+    #player_label {
+        width: auto;
+        padding-top: 1;
+    }
+
+    .kick-button {
+        width: 6;
+        min-width: 6;
+        min-height: 3;
+        height: 3;
+        padding: 0 0;
+        margin-left: 1;
+    }
+    """
+
+    def __init__(
+        self,
+        player,
+        is_host_user,
+        current_player_id
+    ):
+        super().__init__()
+
+        self.player = player
+        self.is_host_user = is_host_user
+        self.current_player_id = current_player_id
+
+
+    def compose(self):
+
+        label = Static(self.name_text(), id="player_label")
+
+        yield label
+
+        if self.show_kick():
+            yield Button(
+                "Kick",
+                id=f"kick_{self.player['player_id']}",
+                classes="kick-button"
+            )
+
+
+    def name_text(self):
+        name = self.player["name"]
+        if self.player["connected"]:
+            name += " [green](connected)[/]"
+        else:
+            name += " [red](disconnected)[/]"
+        if self.player["is_host"]:
+            name += " [grey](host)[/]"
+
+        return name
+
+
+    def show_kick(self):
+        return (
+            self.is_host_user
+            and self.player["player_id"] != self.current_player_id
+        )
