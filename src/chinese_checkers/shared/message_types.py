@@ -14,6 +14,7 @@ MOVE = "move"
 
 CONNECT = "connect"
 PLAYER_JOINED_GAME = "player_joined_game"
+PLAYER_QUIT = "player_quit"
 PLAYER_RECONNECTED = "player_reconnected"
 PLAYER_DISCONNECTED = "player_disconnected"
 
@@ -23,4 +24,5 @@ UPDATE_NUM_PLAYERS = "update_num_players"
 KICK_PLAYER = "kick_player"
 KICKED_FROM_LOBBY = "kicked_from_lobby"
 LEAVE_LOBBY = "leave_lobby"
+LEAVE_GAME = "leave_game"
 SERVER_HEARTBEAT = "server_heartbeat"

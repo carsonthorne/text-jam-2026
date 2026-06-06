@@ -14,7 +14,8 @@ from chinese_checkers.shared.messages import (
     make_player_reconnected,
     make_player_disconnected,
     make_welcome,
-    make_kicked_from_lobby
+    make_kicked_from_lobby,
+    make_player_quit
 )
 from chinese_checkers.shared.message_types import (
     ERROR,
@@ -23,7 +24,7 @@ from chinese_checkers.shared.message_types import (
     START_GAME,
     UPDATE_NUM_PLAYERS,
     LEAVE_LOBBY,
-    KICK_PLAYER
+    KICK_PLAYER,
 )
 
 RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
@@ -55,7 +56,7 @@ class Session:
             START_GAME: self._handle_start_game_message,
             UPDATE_NUM_PLAYERS: self._handle_update_num_players,
             LEAVE_LOBBY: self._handle_leave_lobby,
-            KICK_PLAYER: self._handle_kick_player
+            KICK_PLAYER: self._handle_kick_player,
         }
 
 
@@ -148,14 +149,14 @@ class Session:
 
     def handle_reconnect(self, player):
 
+        self.broadcast_session_state()
+
         if self.host_player_id is None:
             self.host_player_id = player.player_id
 
         if self.state == LOBBY:
 
-            self.broadcast_session_state()
             safe_send_json(player, make_welcome(player, self))
-
 
         elif self.state == IN_PROGRESS:
 
@@ -164,15 +165,23 @@ class Session:
 
     def handle_disconnect(self, player):
 
+        if not player.connected:
+            return
+
+        if player.player_id not in self.players:
+            return
+
         player.disconnect()
+
 
         if (self.state == LOBBY and player.player_id == self.host_player_id):
             self.assign_new_host()
 
-        self.broadcast_session_state()
 
         if self.state == IN_PROGRESS:
             self.broadcast_to_game(make_player_disconnected(player))
+
+        self.broadcast_session_state()
 
         print(
             f"Session.py: handle_disconnect(): Player {player.player_number} disconnected "
@@ -279,6 +288,23 @@ class Session:
         if handler:
 
             handler(player, data)
+
+
+    def handle_leave_game(self, player):
+        if self.state != IN_PROGRESS:
+            return
+
+        player.disconnect()
+
+        self.broadcast_to_game(make_player_quit(player))
+
+        self.remove_player(player)
+
+        if player.connection:
+            try:
+                player.connection.close()
+            except:
+                pass
 
 
     def _handle_start_game_message(self, player, data=None):

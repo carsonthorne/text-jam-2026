@@ -1,6 +1,6 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Static, RichLog
+from textual.widgets import Static, RichLog, Button
 from textual.containers import Horizontal
 from textual.events import Key
 from rich.text import Text
@@ -8,6 +8,8 @@ from rich.text import Text
 from chinese_checkers.ui.board_renderer import BoardRenderer
 from chinese_checkers.ui.board_layout import ZONE_CURSOR_STARTS
 from chinese_checkers.ui.geometry import DIRECTIONS
+from chinese_checkers.shared.messages import make_leave_game
+
 from chinese_checkers.shared.message_types import (
     GAME_STATE,
     VALIDATE_PARTIAL,
@@ -16,7 +18,8 @@ from chinese_checkers.shared.message_types import (
     ERROR,
     PLAYER_RECONNECTED,
     PLAYER_JOINED_GAME,
-    PLAYER_DISCONNECTED
+    PLAYER_DISCONNECTED,
+    PLAYER_QUIT
 )
 
 
@@ -53,7 +56,8 @@ class GameScreen(Screen):
             ERROR: self._handle_error,
             PLAYER_RECONNECTED: self._handle_player_reconnect,
             PLAYER_DISCONNECTED: self._handle_player_disconnect,
-            PLAYER_JOINED_GAME: self._handle_player_joined_game
+            PLAYER_JOINED_GAME: self._handle_player_joined_game,
+            PLAYER_QUIT: self._handle_player_quit,
         }
 
 
@@ -67,8 +71,12 @@ class GameScreen(Screen):
             wrap=True
         )
 
+        quit_button = Button("Quit Game", id="quit_game", variant="error")
+
         self.board_widget.styles.width = "50%"
         self.message_log.styles.width = "50%"
+
+        yield quit_button
 
         yield Horizontal(
             self.board_widget,
@@ -110,11 +118,9 @@ class GameScreen(Screen):
 
     def handle_disconnect(self):
 
-        # self.client.dispatch_to_ui(
-        #     self.app,
-        #     self.log_message,
-        #     "[bold red]Connection to server lost...[/]"
-        # )
+        self.my_turn = False
+        self.selected_path.clear()
+        self.cursor = None
 
         self.log_message("[bold red]Connection to server lost...[/]")
 
@@ -183,6 +189,17 @@ class GameScreen(Screen):
             self.app,
             self.log_message,
             f"[green]{player_name} disconnected from the game.[/]"
+        )
+
+
+    def _handle_player_quit(self, data):
+        
+        player_name = data["player_name"]
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self.log_message,
+            f"[green]{player_name} quit the game.[/]"
         )
 
 
@@ -260,9 +277,13 @@ class GameScreen(Screen):
         
             self.log_message("[bold yellow]Your turn![/]")
 
-        elif not self.my_turn:
+        if not self.my_turn and winner is None:
 
-            self.log_message("[cyan]Waiting for opponent...[/]")
+            if not hasattr(self, "_was_waiting") or not self._was_waiting:
+                self.log_message("[cyan]Waiting for opponent...[/]")
+                self._was_waiting = True
+        else:
+            self._was_waiting = False
 
         self.refresh_board()
 
@@ -414,3 +435,22 @@ class GameScreen(Screen):
     def log_message(self, message):
 
         self.message_log.write(message)
+
+
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "quit_game":
+            self.quit_game()
+
+
+    def quit_game(self):
+
+        self.client.send(make_leave_game())
+
+        self.my_turn = False
+
+        try:
+            self.client.close()
+        except:
+            pass
+
+        self.app.pop_screen()

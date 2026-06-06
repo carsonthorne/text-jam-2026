@@ -6,11 +6,15 @@ import time
 from chinese_checkers.game.player import Player
 from chinese_checkers.server.session_manager import SessionManager
 from chinese_checkers.shared.network import send_json, receive_json, safe_send_json
-from chinese_checkers.shared.settings import LISTEN_HOST, SERVER_PORT, PROTOCOL_VERSION, HEARTBEAT_INTERVAL
+from chinese_checkers.shared.settings import (
+    LISTEN_HOST,
+    SERVER_PORT,
+    PROTOCOL_VERSION,
+    HEARTBEAT_INTERVAL
+)
 from chinese_checkers.shared.messages import (
     make_welcome,
     make_error,
-    make_player_reconnected,
     make_invalid_session,
     make_session_validated,
     make_duplicate_player,
@@ -20,6 +24,7 @@ from chinese_checkers.shared.message_types import (
     CONNECT,
     DEBUG,
     LEAVE_LOBBY,
+    LEAVE_GAME
 )
 
 manager = SessionManager()
@@ -126,7 +131,7 @@ def handle_connection(manager, conn):
         send_json(conn, make_welcome(player, session))
 
     buffer = ""
-    player_left_lobby = False
+    player_exit_type = None
 
     # Receive message loop
     while True:
@@ -145,7 +150,13 @@ def handle_connection(manager, conn):
 
             if data["type"] == LEAVE_LOBBY:
 
-                player_left_lobby = True
+                player_exit_type = "lobby"
+                break
+
+            if data["type"] == LEAVE_GAME:
+
+                player_exit_type = "game"
+                break
 
             session.handle_message(player, data)
 
@@ -158,8 +169,13 @@ def handle_connection(manager, conn):
             traceback.print_exc()
             break
 
-    if player_left_lobby:
+    if player_exit_type == "lobby":
         print(f"Server.py: Player {player.player_id} left the lobby")
+    
+    elif player_exit_type == "game":
+        print(f"Server.py: Player {player.player_id} left the game")
+        session.handle_leave_game(player)
+    
     else:
         session.handle_disconnect(player)
         print(f"Server.py: Player {player.player_id} disconnected")

@@ -339,16 +339,11 @@ class PlayerRow(Horizontal):
 
     #player_label {
         width: auto;
-        padding-top: 1;
     }
 
     .kick-button {
         width: 6;
         min-width: 6;
-        min-height: 3;
-        height: 3;
-        padding: 0 0;
-        margin-left: 1;
     }
     """
 
@@ -375,7 +370,8 @@ class PlayerRow(Horizontal):
             yield Button(
                 "Kick",
                 id=f"kick_{self.player['player_id']}",
-                classes="kick-button"
+                classes="kick-button",
+                compact=True
             )
 
 

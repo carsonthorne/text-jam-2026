@@ -12,7 +12,9 @@ from chinese_checkers.shared.message_types import (
     DUPLICATE_PLAYER,
     PLAYER_JOINED_GAME,
     SERVER_HEARTBEAT,
-    KICKED_FROM_LOBBY
+    KICKED_FROM_LOBBY,
+    LEAVE_GAME,
+    PLAYER_QUIT
 )
 
 def make_error(message):
@@ -103,10 +105,24 @@ def make_kicked_from_lobby():
     }
 
 
+def make_leave_game():
+    return {
+        "type": LEAVE_GAME
+    }
+
+
 def make_player_disconnected(player):
     
     return {
         "type": PLAYER_DISCONNECTED,
+        "player_name": player.name,
+        "player_number": player.player_number
+    }
+
+
+def make_player_quit(player):
+    return {
+        "type": PLAYER_QUIT,
         "player_name": player.name,
         "player_number": player.player_number
     }
