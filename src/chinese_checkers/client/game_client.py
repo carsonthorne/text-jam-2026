@@ -88,7 +88,7 @@ class GameClient:
             OSError
         ):
 
-            self._handle_disconnect
+            self._handle_disconnect()
 
             return False
 
@@ -118,7 +118,7 @@ class GameClient:
             except Exception as e:
                 self.send({"type": DEBUG, "message": f"EXCEPTION: GAME_CLIENT.PY: {e}"})
 
-                self._handle_disconnect
+                self._handle_disconnect()
                 return
                 
         self.running = False

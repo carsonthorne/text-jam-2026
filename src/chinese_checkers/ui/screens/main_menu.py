@@ -153,13 +153,24 @@ class MainMenuScreen(Screen):
             self.app.push_screen(IdentityScreen())
             return
 
-        client.connect_to_session(
-            PUBLIC_SERVER_HOST,
-            SERVER_PORT,
-            identity,
-            session_id=None,
-            num_players=num_players
-        )
+        try:
+
+            client.connect_to_session(
+                PUBLIC_SERVER_HOST,
+                SERVER_PORT,
+                identity,
+                session_id=None,
+                num_players=num_players
+            )
+
+        except ConnectionRefusedError:
+
+            self.notify(
+                "Cannot connect to server.",
+                severity="error"
+            )
+
+            return
 
         self.app.push_screen(
             LobbyScreen(client, identity)
