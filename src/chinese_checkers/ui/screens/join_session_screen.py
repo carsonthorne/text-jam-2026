@@ -22,20 +22,23 @@ class JoinSessionScreen(Screen):
         }
 
 
-    def on_mount(self):
-
-        self.app.client.on_message = self.handle_message
-
-
     def compose(self) -> ComposeResult:
+
+        self.session_id_input = Input(placeholder="Enter session ID", id="session_id")
 
         yield Vertical(
             Static("[bold cyan]Join Session[/]"),
-            Input(placeholder="Enter session ID", id="session_id"),
+            self.session_id_input,
             Button("Join Session", id="join_session"),
             Button("Back to Main Menu", id="back")
         )
 
+
+    def on_mount(self):
+
+        self.app.client.on_message = self.handle_message
+
+        self.session_id_input.focus()
 
     def handle_message(self, data):
 

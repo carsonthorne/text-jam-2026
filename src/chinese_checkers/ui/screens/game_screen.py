@@ -72,6 +72,7 @@ class GameScreen(Screen):
         )
 
         quit_button = Button("Quit Game", id="quit_game", variant="error")
+        quit_button.can_focus = False
 
         self.board_widget.styles.width = "50%"
         self.message_log.styles.width = "50%"
@@ -453,4 +454,5 @@ class GameScreen(Screen):
         except:
             pass
 
-        self.app.pop_screen()
+        while len(self.app.screen_stack) > 2:
+            self.app.pop_screen()

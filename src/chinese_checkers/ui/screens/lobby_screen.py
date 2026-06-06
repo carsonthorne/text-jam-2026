@@ -313,7 +313,8 @@ class LobbyScreen(Screen):
 
             self.client.close()
 
-            self.app.pop_screen()
+            while len(self.app.screen_stack) > 2:
+                self.app.pop_screen()
 
 
     def on_select_changed(self, event: Select.Changed):

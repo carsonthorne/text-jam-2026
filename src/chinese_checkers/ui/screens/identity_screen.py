@@ -11,11 +11,18 @@ class IdentityScreen(Screen):
 
     def compose(self) -> ComposeResult:
 
+        self.name_input = Input(placeholder="Enter your name", id="name")
+
         yield Vertical(
             Static("[bold cyan]Create Identity[/]"),
-            Input(placeholder="Enter your name", id="name"),
+            self.name_input,
             Button("Continue", id="continue")
         )
+
+
+    def on_mount(self):
+
+        self.name_input.focus()
 
 
     def on_button_pressed(self, event: Button.Pressed):

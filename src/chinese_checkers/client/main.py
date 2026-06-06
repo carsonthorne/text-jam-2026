@@ -6,6 +6,8 @@ from chinese_checkers.client.game_client import GameClient
 
 class ChineseCheckersApp(App):
 
+    AUTO_FOCUS = None
+
     BINDINGS = [
         ("ctrl+c", "quit", "Quit")
     ]
