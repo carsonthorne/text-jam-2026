@@ -1,6 +1,5 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widget import Widget
 from textual.widgets import Static, Button, Select, RichLog
 from textual.containers import Vertical, Horizontal
 
@@ -13,7 +12,8 @@ from chinese_checkers.shared.message_types import (
     START_GAME,
     UPDATE_NUM_PLAYERS,
     LEAVE_LOBBY,
-    KICK_PLAYER
+    KICK_PLAYER,
+    KICKED_FROM_LOBBY
 )
 
 class LobbyScreen(Screen):
@@ -47,7 +47,8 @@ class LobbyScreen(Screen):
         self.message_handlers = {
             WELCOME: self._handle_welcome,
             GAME_STARTED: self._handle_game_started,
-            LOBBY_STATE: self._handle_lobby_state
+            LOBBY_STATE: self._handle_lobby_state,
+            KICKED_FROM_LOBBY: self._handle_kicked_from_lobby,
         }
 
 
@@ -151,15 +152,10 @@ class LobbyScreen(Screen):
 
     def rebuild_player_list(self):
 
-        self.log_message(f"Rebuilding player list: {len(self.players)}")
-
         self.players_widget.remove_children()
         self.players_widget.refresh(layout=True)
 
         for player in self.players:
-
-            self.log_message(f"{self.is_host}, {player['name']}, show_kick={self.is_host and player['player_id'] != self.identity['player_id']}"
-            )
 
             self.players_widget.mount(
                 PlayerRow(
@@ -181,6 +177,42 @@ class LobbyScreen(Screen):
 
         if handler:
             handler(data)
+
+
+    def _handle_kicked_from_lobby(self, data):
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self._process_kick
+        )
+
+
+    def _process_kick(self):
+    # def _handle_kicked_from_lobby(self, data):
+
+
+        # Clear lobby state
+        self.session_id = None
+        self.players = []
+        self.num_players = None
+        self.is_host = False
+
+        # Remove stored session
+        self.identity["session_id"] = None
+        save_identity(self.identity)
+
+        # Clear widgets
+        self.title_widget.update("[bold red]Not in a lobby[/]")
+        self.players_widget.remove_children()
+        self.status_widget.update("")
+
+        # Show toast
+        self.notify(
+            "You were kicked from the lobby.",
+            severity="warning"
+        )
+
+        self.client.close()
 
 
     def _handle_welcome(self, data):

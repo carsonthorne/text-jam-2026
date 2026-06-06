@@ -8,13 +8,13 @@ from chinese_checkers.server.session_states import LOBBY, IN_PROGRESS
 from chinese_checkers.shared.messages import (
     make_game_state,
     make_lobby_state,
-    make_error,
     make_partial_validation,
     make_game_started,
     make_player_joined_game,
     make_player_reconnected,
     make_player_disconnected,
-    make_welcome
+    make_welcome,
+    make_kicked_from_lobby
 )
 from chinese_checkers.shared.message_types import (
     ERROR,
@@ -365,6 +365,8 @@ class Session:
 
         if not target:
             return
+
+        safe_send_json(target, make_kicked_from_lobby())
 
         self.remove_player(target)
 

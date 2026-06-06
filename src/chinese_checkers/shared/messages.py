@@ -11,7 +11,8 @@ from chinese_checkers.shared.message_types import (
     INVALID_SESSION,
     DUPLICATE_PLAYER,
     PLAYER_JOINED_GAME,
-    SERVER_HEARTBEAT
+    SERVER_HEARTBEAT,
+    KICKED_FROM_LOBBY
 )
 
 def make_error(message):
@@ -92,6 +93,13 @@ def make_player_reconnected(player):
         "type": PLAYER_RECONNECTED,
         "player_name": player.name,
         "player_number": player.player_number
+    }
+
+
+def make_kicked_from_lobby():
+
+    return {
+        "type": KICKED_FROM_LOBBY
     }
 
 
