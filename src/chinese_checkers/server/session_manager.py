@@ -1,4 +1,5 @@
-import uuid
+import random
+import string
 import threading
 
 from chinese_checkers.server.session import Session
@@ -11,16 +12,31 @@ class SessionManager:
         self.lock = threading.Lock()
 
 
+    def generate_session_id(self):
+
+        letters = "ABCDEFGHJKLMNPQRSTUVWXYZ"
+
+        while True:
+
+            session_id = "".join(
+                random.choice(letters)
+                for _ in range(4)
+            )
+
+            if session_id not in self.sessions:
+                return session_id
+
+
     def create_session(self, num_players):
 
-        session_id = str(uuid.uuid4())
-
-        session = Session(
-            session_id=session_id,
-            num_players=num_players
-        )
-
         with self.lock:
+
+            session_id = self.generate_session_id()
+
+            session = Session(
+                session_id=session_id,
+                num_players=num_players
+            )
 
             self.sessions[session_id] = session
 

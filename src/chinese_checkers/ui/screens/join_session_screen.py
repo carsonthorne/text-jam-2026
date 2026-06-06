@@ -27,7 +27,7 @@ class JoinSessionScreen(Screen):
                 Input
             )
 
-            session_id = session_input.value.strip()
+            session_id = session_input.value.strip().upper()
 
             if not session_id:
                 return
