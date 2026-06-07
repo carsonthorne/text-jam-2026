@@ -6,25 +6,25 @@ from textual.containers import Vertical, CenterMiddle, VerticalScroll
 CONTROLS_MARKDOWN = r"""
 > **Move cursor**
 ```text
-           (up-left)       (up-right)
-                    \     /
-                    [W] [E]
-        (left) -- [A]     [D] -- (right)
-                    [Z] [X]
-                    /     \
-         (down-left)       (down-right)
+         (up-left)       (up-right)
+                  \     /
+                  [W] [E]
+      (left) -- [A]     [D] -- (right)
+                  [Z] [X]
+                  /     \
+       (down-left)       (down-right)
 ```
 
 > **Piece/Tile Selection/Deselection**
 ```text
-        [SPACE] -- (select piece/tile)
-        [ESC]   -- (deselect last tile/piece)
-        [TAB]   -- (cycle through pieces)
+    [SPACE] -- (select piece/tile)
+    [ESC]   -- (deselect last tile/piece)
+    [TAB]   -- (cycle through pieces)
 ```
 
 > **Submit move**
 ```text
-        [ENTER/RETURN] -- (finalize move)
+    [ENTER/RETURN] -- (finalize move)
 ```
 """
 

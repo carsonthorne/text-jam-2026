@@ -28,6 +28,10 @@ class LobbyScreen(Screen):
     border: ascii white;
     }
 
+    #lobby_chat_container {
+    border: ascii white;
+    }
+
     #lobby_button_container {
     align: center bottom;
     
@@ -85,14 +89,15 @@ class LobbyScreen(Screen):
         self.message_log = RichLog(
             highlight=True,
             markup=True,
-            wrap=True
+            wrap=True,
+            id="lobby_chat_container"
         )
 
 
         with CenterMiddle():
                 
-            with Horizontal():
-                with Vertical(id="main_lobby_container"):
+            with Horizontal(id="main_lobby_container"):
+                with Vertical():
                     yield self.session_id_widget
                     yield self.player_count_select
                     yield self.status_widget
@@ -107,9 +112,12 @@ class LobbyScreen(Screen):
 
     def on_mount(self):
 
-        main_lobby_container = self.query_one("#main_lobby_container", Vertical)
+        main_lobby_container = self.query_one("#main_lobby_container", Horizontal)
+        main_lobby_container.border_title = "[bold yellow]Lobby[/]"
 
-        main_lobby_container.border_title = f"[bold yellow]Lobby[/]\nSession ID: {self.session_id}"
+        lobby_chat_container = self.query_one("#lobby_chat_container", RichLog)
+        lobby_chat_container.border_title = "[bold]Chat[/]"
+
 
         if self.session_id and self.players:
             self.refresh_lobby()
@@ -368,6 +376,7 @@ class PlayerRow(Horizontal):
         width: 6;
         min-width: 6;
         align: right middle;
+        dock: right;
     }
     """
 

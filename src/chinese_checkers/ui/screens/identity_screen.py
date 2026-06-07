@@ -12,13 +12,14 @@ class IdentityScreen(Screen):
     DEFAULT_CSS = """
     #username_container {
     width: 30;
-    height: auto;
+    height: 11;
     border: ascii white;
     padding: 1;
     }
 
     Button {
     width: 100%;
+    box-sizing: border-box;
     margin: 1 4;
     }
     """

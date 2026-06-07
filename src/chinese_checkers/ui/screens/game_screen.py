@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
 from textual.widgets import Static, RichLog, Button
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.events import Key
 from rich.text import Text
 
@@ -24,6 +24,50 @@ from chinese_checkers.shared.message_types import (
 
 
 class GameScreen(Screen):
+
+    DEFAULT_CSS = """
+    #game_screen_container {
+    border: ascii white;
+    height: 100%;
+    }
+
+    #game_area {
+    height: 1fr;
+    layout: vertical;
+    }
+
+    #board_container {
+        height: 1fr;
+        align: center middle;
+    }
+
+    #game_board {
+        width: 50%;
+        min-width: 25;
+        height: auto;
+    }
+
+    #button_bar {
+        height: auto;
+        dock: bottom;
+        align: center bottom;
+        width: 100%;
+    }
+
+    #button_bar Button {
+    width: 30%;
+    min-width: 10;
+    box-sizing: border-box;
+    margin: 1 2;
+    }
+
+    #game_chat {
+    border: ascii white;
+    width: 50%;
+    height: 100%;
+    }
+    """
+
 
     def __init__(self, client, identity, player_number=None, player_configs=None):
         
@@ -63,29 +107,47 @@ class GameScreen(Screen):
 
     def compose(self) -> ComposeResult:
 
-        self.board_widget = Static()
+        self.board_widget = Static(id="game_board")
 
         self.message_log = RichLog(
             highlight=True,
             markup=True,
-            wrap=True
+            wrap=True,
+            id="game_chat"
         )
 
-        quit_button = Button("Quit Game", id="quit_game", variant="error")
+        rules_button = Button("Rules", id="rules", compact=True)
+        rules_button.can_focus = False
+
+        controls_button = Button("Controls", id="controls", compact=True)
+        controls_button.can_focus = False
+
+        quit_button = Button("Quit", id="quit_game", compact=True)
         quit_button.can_focus = False
 
-        self.board_widget.styles.width = "50%"
-        self.message_log.styles.width = "50%"
 
-        yield quit_button
+        with Horizontal(id="game_screen_container"):
+            with Vertical(id="game_area"):
+                with Vertical(id="board_container"):
+                    yield self.board_widget
+                with Horizontal(id="button_bar"):
 
-        yield Horizontal(
-            self.board_widget,
-            self.message_log
-        )
+                    yield rules_button
+                    yield controls_button
+                    yield quit_button
+
+            yield self.message_log
+            
 
 
     def on_mount(self):
+
+        game_screen_container = self.query_one("#game_screen_container", Horizontal)
+        game_screen_container.border_title = f"[bold yellow]Session ID: {self.identity['session_id']}[/]"
+
+        game_chat = self.query_one("#game_chat", RichLog)
+        game_chat.border_title = "[bold]Chat[/]"
+
 
         self.refresh_board()
 
@@ -457,4 +519,3 @@ class GameScreen(Screen):
         while len(self.app.screen_stack) > 2:
             self.app.pop_screen()
 
-            
