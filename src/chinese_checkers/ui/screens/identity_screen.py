@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
 from textual.widgets import Input, Button, Static
-from textual.containers import Vertical
+from textual.containers import Vertical, CenterMiddle
 
 import uuid
 
@@ -9,18 +9,36 @@ from chinese_checkers.client.local_identity import save_identity
 
 class IdentityScreen(Screen):
 
+    DEFAULT_CSS = """
+    #username_container {
+    width: 30;
+    height: auto;
+    border: ascii white;
+    padding: 1;
+    }
+
+    Button {
+    width: 100%;
+    margin: 1 4;
+    }
+    """
+
     def compose(self) -> ComposeResult:
 
         self.name_input = Input(placeholder="Enter your name", id="name")
 
-        yield Vertical(
-            Static("[bold cyan]Create Identity[/]"),
-            self.name_input,
-            Button("Continue", id="continue")
-        )
+        with CenterMiddle():
+            with Vertical(id="username_container"):
+                yield self.name_input
+                yield Button("Continue", id="continue")
+            
 
 
     def on_mount(self):
+
+        username_container = self.query_one("#username_container", Vertical)
+
+        username_container.border_title = "[bold yellow]Enter Username[/]"
 
         self.name_input.focus()
 

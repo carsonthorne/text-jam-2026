@@ -6,6 +6,8 @@ from textual.containers import Vertical, CenterMiddle
 from chinese_checkers.ui.screens.game_screen import GameScreen
 from chinese_checkers.ui.screens.lobby_screen import LobbyScreen
 from chinese_checkers.ui.screens.identity_screen import IdentityScreen
+from chinese_checkers.ui.screens.rules_screen import RulesScreen
+from chinese_checkers.ui.screens.controls_screen import ControlsScreen
 from chinese_checkers.ui.screens.join_session_screen import JoinSessionScreen
 from chinese_checkers.client.local_identity import save_identity, load_identity, clear_identity
 from chinese_checkers.shared.message_types import ERROR, SESSION_VALIDATED, INVALID_SESSION, DUPLICATE_PLAYER
@@ -164,13 +166,21 @@ class MainMenuScreen(Screen):
 
             self.app.push_screen(JoinSessionScreen())
 
-        elif button_id == "switch_player":
+        elif button_id == "change_username":
 
             clear_identity()
 
             self.app.client.identity = None
 
             self.app.push_screen(IdentityScreen())
+
+        elif button_id == "rules":
+
+            self.app.push_screen(RulesScreen())
+
+        elif button_id == "controls":
+
+            self.app.push_screen(ControlsScreen())
 
 
     def create_session(self, num_players):

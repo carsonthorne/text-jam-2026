@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Button, Static, Input
-from textual.containers import Vertical
+from textual.widgets import Button, Input
+from textual.containers import Vertical, CenterMiddle, Horizontal
 
 from chinese_checkers.client.local_identity import save_identity
 from chinese_checkers.ui.screens.lobby_screen import LobbyScreen
@@ -12,6 +12,25 @@ from chinese_checkers.shared.message_types import (
 )
 
 class JoinSessionScreen(Screen):
+
+    DEFAULT_CSS = """
+    #join_session_container {
+    width: 50;
+    height: 11;
+    border: ascii white;
+    padding: 1;
+    }
+
+    Horizontal {
+    width: 1fr;
+    align: center middle;
+    }
+
+    Button {
+    box-sizing: border-box;
+    margin: 1 4;
+    }
+    """
 
     def __init__(self):
         super().__init__()
@@ -26,15 +45,20 @@ class JoinSessionScreen(Screen):
 
         self.session_id_input = Input(placeholder="Enter session ID", id="session_id")
 
-        yield Vertical(
-            Static("[bold cyan]Join Session[/]"),
-            self.session_id_input,
-            Button("Join Session", id="join_session"),
-            Button("Back to Main Menu", id="back")
-        )
+        with CenterMiddle():
+            with Vertical(id="join_session_container"):
+                yield self.session_id_input
+                with Horizontal():
+                    yield Button("Back", id="back")
+                    yield Button("Join", id="join_session")
+            
 
 
     def on_mount(self):
+
+        join_session_container = self.query_one("#join_session_container", Vertical)
+
+        join_session_container.border_title = "[bold yellow]Join Session[/]"
 
         self.app.client.on_message = self.handle_message
 
