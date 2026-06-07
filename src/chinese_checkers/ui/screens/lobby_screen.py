@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
 from textual.widgets import Static, Button, Select, RichLog
-from textual.containers import Vertical, Horizontal
+from textual.containers import Vertical, Horizontal, CenterMiddle
 
 from chinese_checkers.client.local_identity import save_identity
 from chinese_checkers.ui.screens.game_screen import GameScreen
@@ -20,9 +20,20 @@ class LobbyScreen(Screen):
 
     DEFAULT_CSS = """
     #player_list {
+    padding-top: 1;
     height: auto;
     }
+    
+    #main_lobby_container {
+    border: ascii white;
+    }
+
+    #lobby_button_container {
+    align: center bottom;
+    
+    }
     """
+
 
     def __init__(self, client, identity):
 
@@ -54,7 +65,7 @@ class LobbyScreen(Screen):
 
     def compose(self) -> ComposeResult:
 
-        self.title_widget = Static()
+        self.session_id_widget = Static()
         self.player_count_select = Select(
             [
                 ("2 Players", 2),
@@ -77,21 +88,29 @@ class LobbyScreen(Screen):
             wrap=True
         )
 
-        yield Vertical(
-            self.title_widget,
-            self.player_count_select,
-            self.players_widget,
-            self.status_widget,
-            self.start_button,
-            self.back_button,
-            self.message_log
 
-        )
+        with CenterMiddle():
+                
+            with Horizontal():
+                with Vertical(id="main_lobby_container"):
+                    yield self.session_id_widget
+                    yield self.player_count_select
+                    yield self.status_widget
+                    yield self.players_widget
+                    with Horizontal(id="lobby_button_container"):
+                        yield self.back_button
+                        yield self.start_button
+                yield self.message_log
+
+        
 
 
     def on_mount(self):
 
-        # self.refresh_lobby()
+        main_lobby_container = self.query_one("#main_lobby_container", Vertical)
+
+        main_lobby_container.border_title = f"[bold yellow]Lobby[/]\nSession ID: {self.session_id}"
+
         if self.session_id and self.players:
             self.refresh_lobby()
 
@@ -103,8 +122,8 @@ class LobbyScreen(Screen):
 
     def refresh_lobby(self):
 
-        self.title_widget.update(
-            f"[bold cyan]Lobby[/]\nSession ID: {self.session_id}"
+        self.session_id_widget.update(
+            f"Session ID: [bold]{self.session_id}[/]"
         )
 
         if self.num_players is not None:
@@ -202,7 +221,7 @@ class LobbyScreen(Screen):
         save_identity(self.identity)
 
         # Clear widgets
-        self.title_widget.update("[bold red]Not in a lobby[/]")
+        self.session_id_widget.update("[bold red]Not in a lobby[/]")
         self.players_widget.remove_children()
         self.status_widget.update("")
 
@@ -213,6 +232,9 @@ class LobbyScreen(Screen):
         )
 
         self.client.close()
+
+        while len(self.app.screen_stack) > 2:
+            self.app.pop_screen()
 
 
     def _handle_welcome(self, data):
@@ -345,6 +367,7 @@ class PlayerRow(Horizontal):
     .kick-button {
         width: 6;
         min-width: 6;
+        align: right middle;
     }
     """
 

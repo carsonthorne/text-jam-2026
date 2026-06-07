@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Button, Static
-from textual.containers import Vertical
+from textual.widgets import Button
+from textual.containers import Vertical, CenterMiddle
 
 from chinese_checkers.ui.screens.game_screen import GameScreen
 from chinese_checkers.ui.screens.lobby_screen import LobbyScreen
@@ -12,6 +12,29 @@ from chinese_checkers.shared.message_types import ERROR, SESSION_VALIDATED, INVA
 from chinese_checkers.shared.settings import PUBLIC_SERVER_HOST, SERVER_PORT
 
 class MainMenuScreen(Screen):
+
+    DEFAULT_CSS = """
+    #menu_container {
+    width: 30;
+    height: auto;
+    border: ascii white;
+    padding: 1;
+    }
+
+    Button {
+    width: auto;
+    }
+
+    Vertical {
+    align: center middle;
+    }
+
+    #change_username {
+    dock: bottom;
+    width: auto;
+    }
+    """
+
 
     def __init__(self):
         super().__init__()
@@ -27,19 +50,25 @@ class MainMenuScreen(Screen):
 
     def compose(self) -> ComposeResult:
 
-        yield Vertical(
-            Static("[bold cyan]Chinese Checkers[/]"),
+        yield Button("Change Username", id="change_username")
 
-            Button("Create Session", id="create"),
-            Button("Join Session", id="join"),
-            Button("Rules", id="rules"),
-            Button("Controls", id="controls"),
-            Button("Switch Player", id="switch_player"),
-            Button("Quit", id="quit")
-        )
+        with CenterMiddle():
+            with Vertical(id="menu_container"):
+
+                yield Button("Create Session", id="create")
+                yield Button("Join Session", id="join")
+                yield Button("Rules", id="rules")
+                yield Button("Controls", id="controls")
+                yield Button("Quit", id="quit")
+                    
 
 
     def on_mount(self):
+
+        menu_container = self.query_one("#menu_container", Vertical)
+
+        menu_container.border_title = "[bold yellow]Chinese Checkers[/]"
+
         self.app.client.on_message = self.handle_message
 
         identity = load_identity()

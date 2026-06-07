@@ -23,7 +23,6 @@ from chinese_checkers.shared.message_types import (
     MOVE,
     START_GAME,
     UPDATE_NUM_PLAYERS,
-    LEAVE_LOBBY,
     KICK_PLAYER,
 )
 
@@ -55,7 +54,6 @@ class Session:
             MOVE: self._handle_move_message,
             START_GAME: self._handle_start_game_message,
             UPDATE_NUM_PLAYERS: self._handle_update_num_players,
-            LEAVE_LOBBY: self._handle_leave_lobby,
             KICK_PLAYER: self._handle_kick_player,
         }
 
@@ -98,6 +96,8 @@ class Session:
 
 
     def assign_new_host(self):
+
+        print("assigning new host...")
 
         for player in self.players.values():
 
@@ -357,8 +357,8 @@ class Session:
         self.broadcast_session_state()
 
 
-    def _handle_leave_lobby(self, player, data):
-
+    def handle_leave_lobby(self, player):
+        print("session: handle leave lobby")
         if self.state != LOBBY:
             return
 

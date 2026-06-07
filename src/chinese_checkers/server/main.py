@@ -171,7 +171,8 @@ def handle_connection(manager, conn):
 
     if player_exit_type == "lobby":
         print(f"Server.py: Player {player.player_id} left the lobby")
-    
+        session.handle_leave_lobby(player)
+
     elif player_exit_type == "game":
         print(f"Server.py: Player {player.player_id} left the game")
         session.handle_leave_game(player)

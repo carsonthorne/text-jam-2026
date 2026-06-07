@@ -456,3 +456,5 @@ class GameScreen(Screen):
 
         while len(self.app.screen_stack) > 2:
             self.app.pop_screen()
+
+            
