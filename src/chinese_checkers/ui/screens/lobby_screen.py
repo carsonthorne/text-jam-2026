@@ -115,8 +115,8 @@ class LobbyScreen(Screen):
         main_lobby_container = self.query_one("#main_lobby_container", Horizontal)
         main_lobby_container.border_title = "[bold yellow]Lobby[/]"
 
-        lobby_chat_container = self.query_one("#lobby_chat_container", RichLog)
-        lobby_chat_container.border_title = "[bold]Chat[/]"
+        # lobby_chat_container = self.query_one("#lobby_chat_container", RichLog)
+        # lobby_chat_container.border_title = "[bold]Chat[/]"
 
 
         if self.session_id and self.players:

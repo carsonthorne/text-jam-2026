@@ -145,8 +145,8 @@ class GameScreen(Screen):
         game_screen_container = self.query_one("#game_screen_container", Horizontal)
         game_screen_container.border_title = f"[bold yellow]Session ID: {self.identity['session_id']}[/]"
 
-        game_chat = self.query_one("#game_chat", RichLog)
-        game_chat.border_title = "[bold]Chat[/]"
+        # game_chat = self.query_one("#game_chat", RichLog)
+        # game_chat.border_title = "[bold]Chat[/]"
 
 
         self.refresh_board()
