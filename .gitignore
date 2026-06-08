@@ -18,3 +18,15 @@ prod_test/
 # Secrets
 .env
 .pypirc
+
+# Packaging
+*.egg
+.eggs/
+
+# Coverage/testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS
+.DS_Store
