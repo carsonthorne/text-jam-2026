@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chinese-checkers-game"
-version = "0.1.3"
+version = "0.1.4"
 description = "Networked terminal Chinese Checkers built with Textual"
 readme = "README.md"
 requires-python = ">=3.13"
