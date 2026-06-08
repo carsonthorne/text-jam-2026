@@ -34,8 +34,10 @@ src/chinese_checkers/ui/board_renderer.py
 src/chinese_checkers/ui/geometry.py
 src/chinese_checkers/ui/theme.py
 src/chinese_checkers/ui/screens/__init__.py
+src/chinese_checkers/ui/screens/controls_screen.py
 src/chinese_checkers/ui/screens/game_screen.py
 src/chinese_checkers/ui/screens/identity_screen.py
 src/chinese_checkers/ui/screens/join_session_screen.py
 src/chinese_checkers/ui/screens/lobby_screen.py
 src/chinese_checkers/ui/screens/main_menu.py
+src/chinese_checkers/ui/screens/rules_screen.py
