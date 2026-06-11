@@ -11,6 +11,7 @@ START_GAME = "start_game"
 VALIDATE_PARTIAL = "validate_partial"
 PARTIAL_VALIDATION = "partial_validation"
 MOVE = "move"
+CHAT = "chat"
 
 CONNECT = "connect"
 PLAYER_JOINED_GAME = "player_joined_game"

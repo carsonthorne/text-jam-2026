@@ -1,3 +1,5 @@
+import time
+
 from chinese_checkers.shared.message_types import (
     GAME_STATE,
     ERROR,
@@ -14,7 +16,8 @@ from chinese_checkers.shared.message_types import (
     SERVER_HEARTBEAT,
     KICKED_FROM_LOBBY,
     LEAVE_GAME,
-    PLAYER_QUIT
+    PLAYER_QUIT,
+    CHAT
 )
 
 def make_error(message):
@@ -47,7 +50,8 @@ def make_welcome(player, session):
         "player_id": player.player_id,
         "player_number": player.player_number,
         "players": player_configs,
-        "session_id": session.session_id
+        "session_id": session.session_id,
+        "chat_history": session.chat_history
     }
 
 
@@ -125,6 +129,16 @@ def make_player_quit(player):
         "type": PLAYER_QUIT,
         "player_name": player.name,
         "player_number": player.player_number
+    }
+
+
+def make_chat(player, message):
+    return {
+        "type": CHAT,
+        "player_name": player.name,
+        "player_number": player.player_number,
+        "message": message,
+        "timestamp": time.time()
     }
 
 

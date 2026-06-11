@@ -1,6 +1,6 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Static, Button, Select, RichLog
+from textual.widgets import Static, Button, Select, RichLog, Input
 from textual.containers import Vertical, Horizontal, CenterMiddle
 
 from chinese_checkers.client.local_identity import save_identity
@@ -13,7 +13,8 @@ from chinese_checkers.shared.message_types import (
     UPDATE_NUM_PLAYERS,
     LEAVE_LOBBY,
     KICK_PLAYER,
-    KICKED_FROM_LOBBY
+    KICKED_FROM_LOBBY,
+    CHAT
 )
 
 class LobbyScreen(Screen):
@@ -27,14 +28,18 @@ class LobbyScreen(Screen):
     #main_lobby_container {
     border: ascii white;
     }
-
     #lobby_chat_container {
     border: ascii white;
     }
 
     #lobby_button_container {
     align: center bottom;
+
     
+    #chat_input {
+    
+    }
+
     }
     """
 
@@ -64,6 +69,7 @@ class LobbyScreen(Screen):
             GAME_STARTED: self._handle_game_started,
             LOBBY_STATE: self._handle_lobby_state,
             KICKED_FROM_LOBBY: self._handle_kicked_from_lobby,
+            CHAT: self._handle_chat,
         }
 
 
@@ -93,6 +99,7 @@ class LobbyScreen(Screen):
             id="lobby_chat_container"
         )
 
+        self.chat_input = Input(placeholder="Say something...", id="chat_input")
 
         with CenterMiddle():
                 
@@ -105,7 +112,9 @@ class LobbyScreen(Screen):
                     with Horizontal(id="lobby_button_container"):
                         yield self.back_button
                         yield self.start_button
-                yield self.message_log
+                with Vertical():
+                    yield self.message_log
+                    yield self.chat_input
 
         
 
@@ -115,8 +124,8 @@ class LobbyScreen(Screen):
         main_lobby_container = self.query_one("#main_lobby_container", Horizontal)
         main_lobby_container.border_title = "[bold yellow]Lobby[/]"
 
-        # lobby_chat_container = self.query_one("#lobby_chat_container", RichLog)
-        # lobby_chat_container.border_title = "[bold]Chat[/]"
+        lobby_chat_container = self.query_one("#lobby_chat_container", RichLog)
+        lobby_chat_container.border_title = "[bold]Chat[/]"
 
 
         if self.session_id and self.players:
@@ -204,6 +213,11 @@ class LobbyScreen(Screen):
 
         if handler:
             handler(data)
+
+
+    def _handle_chat(self, data):
+        text = f"[cyan]{data['player_name']}:[/] {data['message']}"
+        self.client.dispatch_to_ui(self.app, self.log_message, text)
 
 
     def _handle_kicked_from_lobby(self, data):
@@ -358,6 +372,16 @@ class LobbyScreen(Screen):
                 "type": UPDATE_NUM_PLAYERS,
                 "num_players": event.value
             })
+
+
+    def on_input_submitted(self, event: Input.Submitted):
+        if event.input.id == "chat_input":
+            self.client.send({
+                "type": CHAT,
+                "message": event.value
+            })
+            event.input.value = ""
+
 
 class PlayerRow(Horizontal):
 

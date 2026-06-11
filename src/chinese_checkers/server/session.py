@@ -15,7 +15,8 @@ from chinese_checkers.shared.messages import (
     make_player_disconnected,
     make_welcome,
     make_kicked_from_lobby,
-    make_player_quit
+    make_player_quit,
+    make_chat
 )
 from chinese_checkers.shared.message_types import (
     ERROR,
@@ -24,6 +25,7 @@ from chinese_checkers.shared.message_types import (
     START_GAME,
     UPDATE_NUM_PLAYERS,
     KICK_PLAYER,
+    CHAT
 )
 
 RECONNECT_TIMEOUT = 300      # Clean up session after five minutes of inactivity.
@@ -46,6 +48,8 @@ class Session:
 
         self.state = LOBBY
 
+        self.chat_history = []
+
         self.created_at = time.time()
         self.last_activity = time.time()
 
@@ -55,6 +59,7 @@ class Session:
             START_GAME: self._handle_start_game_message,
             UPDATE_NUM_PLAYERS: self._handle_update_num_players,
             KICK_PLAYER: self._handle_kick_player,
+            CHAT: self._handle_chat,
         }
 
 
@@ -66,6 +71,9 @@ class Session:
             self.host_player_id = player.player_id
 
         self.players[player.player_id] = player
+
+        for msg in self.chat_history:
+            safe_send_json(player, msg)
 
         self.broadcast_session_state()
 
@@ -153,6 +161,9 @@ class Session:
 
         if self.host_player_id is None:
             self.host_player_id = player.player_id
+        
+        for msg in self.chat_history:
+            safe_send_json(player, msg)
 
         if self.state == LOBBY:
 
@@ -161,6 +172,7 @@ class Session:
         elif self.state == IN_PROGRESS:
 
             self.broadcast_to_game(make_player_reconnected(player))
+
 
 
     def handle_disconnect(self, player):
@@ -272,6 +284,8 @@ class Session:
 
                 safe_send_json(player, make_game_started(self, player))
 
+                for msg in self.chat_history:
+                    safe_send_json(player, msg)
                 for joined_player in self.players.values():
 
                     safe_send_json(player, make_player_joined_game(joined_player))
@@ -305,6 +319,29 @@ class Session:
                 player.connection.close()
             except:
                 pass
+
+
+    def _handle_chat(self, player, data):
+        message = data.get("message", "").strip()
+        if not message:
+            return
+
+        chat_msg = make_chat(player, message)
+
+        self.chat_history.append(chat_msg)
+
+        # limit memory
+        # if len(self.chat_history) > 200:
+        #     self.chat_history.pop(0)
+
+        # broadcast to everyone (lobby OR game)
+        self.broadcast_chat(chat_msg)
+
+
+    def broadcast_chat(self, message):
+        for player in self.players.values():
+            if player.connection:
+                safe_send_json(player, message)
 
 
     def _handle_start_game_message(self, player, data=None):

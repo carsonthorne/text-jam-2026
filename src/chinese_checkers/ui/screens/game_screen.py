@@ -1,10 +1,12 @@
 from textual.screen import Screen
 from textual.app import ComposeResult
-from textual.widgets import Static, RichLog, Button
+from textual.widgets import Static, RichLog, Button, Input
 from textual.containers import Horizontal, Vertical
 from textual.events import Key
 from rich.text import Text
 
+from chinese_checkers.ui.screens.rules_screen import RulesScreen
+from chinese_checkers.ui.screens.controls_screen import ControlsScreen
 from chinese_checkers.ui.board_renderer import BoardRenderer
 from chinese_checkers.ui.board_layout import ZONE_CURSOR_STARTS
 from chinese_checkers.ui.geometry import DIRECTIONS
@@ -19,7 +21,8 @@ from chinese_checkers.shared.message_types import (
     PLAYER_RECONNECTED,
     PLAYER_JOINED_GAME,
     PLAYER_DISCONNECTED,
-    PLAYER_QUIT
+    PLAYER_QUIT,
+    CHAT
 )
 
 
@@ -63,8 +66,6 @@ class GameScreen(Screen):
 
     #game_chat {
     border: ascii white;
-    width: 50%;
-    height: 100%;
     }
     """
 
@@ -102,6 +103,7 @@ class GameScreen(Screen):
             PLAYER_DISCONNECTED: self._handle_player_disconnect,
             PLAYER_JOINED_GAME: self._handle_player_joined_game,
             PLAYER_QUIT: self._handle_player_quit,
+            CHAT: self._handle_chat,
         }
 
 
@@ -115,6 +117,7 @@ class GameScreen(Screen):
             wrap=True,
             id="game_chat"
         )
+        self.message_log.can_focus = False
 
         rules_button = Button("Rules", id="rules", compact=True)
         rules_button.can_focus = False
@@ -124,6 +127,8 @@ class GameScreen(Screen):
 
         quit_button = Button("Quit", id="quit_game", compact=True)
         quit_button.can_focus = False
+
+        self.chat_input = Input(placeholder="Say something...", id="chat_input")
 
 
         with Horizontal(id="game_screen_container"):
@@ -136,8 +141,9 @@ class GameScreen(Screen):
                     yield controls_button
                     yield quit_button
 
-            yield self.message_log
-            
+            with Vertical(id="chat_area"):
+                yield self.message_log
+                yield self.chat_input
 
 
     def on_mount(self):
@@ -145,8 +151,8 @@ class GameScreen(Screen):
         game_screen_container = self.query_one("#game_screen_container", Horizontal)
         game_screen_container.border_title = f"[bold yellow]Session ID: {self.identity['session_id']}[/]"
 
-        # game_chat = self.query_one("#game_chat", RichLog)
-        # game_chat.border_title = "[bold]Chat[/]"
+        game_chat = self.query_one("#game_chat", RichLog)
+        game_chat.border_title = "[bold]Chat[/]"
 
 
         self.refresh_board()
@@ -193,6 +199,47 @@ class GameScreen(Screen):
 
         if handler:
             handler(data)
+
+
+    # def _handle_chat(self, data):
+    #     text = f"[cyan]{data['player_name']}:[/] {data['message']}"
+    #     self.client.dispatch_to_ui(self.app, self.log_message, text)
+
+
+    def _handle_chat(self, data):
+
+        player_number = data["player_number"]
+
+        config = next(
+            (
+                config
+                for config in self.player_configs
+                if config["player"] == player_number
+            ),
+            None
+        )
+
+        if config is None:
+            self.client.dispatch_to_ui(
+                self.app,
+                self.log_message,
+                f"{data['player_name']}: {data['message']}"
+            )
+            return
+
+        message = Text(
+            f"{data['player_name']}",
+            style=str(config["piece"])
+        )
+
+        message.append(": ", style="white")
+        message.append(data["message"], style="white")
+
+        self.client.dispatch_to_ui(
+            self.app,
+            self.log_message,
+            message
+        )
 
 
     def _handle_game_state(self, data):
@@ -412,6 +459,13 @@ class GameScreen(Screen):
         self.refresh_board()
 
 
+    def on_click(self, event):
+        chat_input = self.query_one("#chat_input")
+
+        if event.widget != chat_input:
+            self.app.set_focus(None)
+
+
     def on_key(self, event: Key):
 
         if not self.my_turn:
@@ -449,6 +503,10 @@ class GameScreen(Screen):
 
         elif key == "enter":
 
+            self.client.send({"type": "debug", "message": f"focused widget: {self.app.focused.id}"})
+            if self.app.focused.id == "chat_input":
+                return
+
             if len(self.selected_path) >= 2:
 
                 self.send_move()
@@ -465,6 +523,9 @@ class GameScreen(Screen):
 
                 self.log_message("[bold red]Invalid move:[/] Select a piece to move.")
 
+        elif key == "escape" and self.app.focused.id == "chat_input":
+            self.app.set_focus(None)
+
         elif key == "escape" and self.selected_path:
 
             self.cursor = self.selected_path[-1]
@@ -472,6 +533,16 @@ class GameScreen(Screen):
             self.selected_path.pop()
 
             self.refresh_board()
+
+
+
+    def on_input_submitted(self, event: Input.Submitted):
+        if event.input.id == "chat_input":
+            self.client.send({
+                "type": CHAT,
+                "message": event.value
+            })
+            event.input.value = ""
 
 
     def send_move(self):
@@ -503,7 +574,10 @@ class GameScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id == "quit_game":
             self.quit_game()
-
+        if event.button.id == "rules":
+            self.app.push_screen(RulesScreen())
+        if event.button.id == "controls":
+            self.app.push_screen(ControlsScreen())
 
     def quit_game(self):
 
