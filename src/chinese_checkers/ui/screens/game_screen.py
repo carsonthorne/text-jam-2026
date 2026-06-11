@@ -28,6 +28,11 @@ from chinese_checkers.shared.message_types import (
 
 class GameScreen(Screen):
 
+    BINDINGS = [
+        ("tab", "cycle_piece", "Cycle Piece"),
+        ("/", "focus_chat", "Chat"),
+    ]
+
     DEFAULT_CSS = """
     #game_screen_container {
     border: ascii white;
@@ -201,35 +206,13 @@ class GameScreen(Screen):
             handler(data)
 
 
-    # def _handle_chat(self, data):
-    #     text = f"[cyan]{data['player_name']}:[/] {data['message']}"
-    #     self.client.dispatch_to_ui(self.app, self.log_message, text)
-
-
     def _handle_chat(self, data):
 
-        player_number = data["player_number"]
-
-        config = next(
-            (
-                config
-                for config in self.player_configs
-                if config["player"] == player_number
-            ),
-            None
-        )
-
-        if config is None:
-            self.client.dispatch_to_ui(
-                self.app,
-                self.log_message,
-                f"{data['player_name']}: {data['message']}"
-            )
-            return
+        player_style = self.get_player_style(data["player_number"])
 
         message = Text(
             f"{data['player_name']}",
-            style=str(config["piece"])
+            style=player_style
         )
 
         message.append(": ", style="white")
@@ -240,6 +223,20 @@ class GameScreen(Screen):
             self.log_message,
             message
         )
+
+
+    def get_player_style(self, player_number):
+
+        config = next(
+            (
+                config
+                for config in self.player_configs
+                if config["player"] == player_number
+            ),
+            None
+        )
+
+        return str(config["piece"]) if config else "cyan"
 
 
     def _handle_game_state(self, data):
@@ -325,19 +322,10 @@ class GameScreen(Screen):
 
     def show_player_joined(self, player_name, player_number):
 
-        config = next(
-            (
-                config
-                for config in self.player_configs
-                if config["player"] == player_number
-            ),
-            None
-        )
+        player_style = self.get_player_style(player_number)
 
-        if config is None:
-            return
+        message = Text(player_name, style=player_style)
 
-        message = Text(player_name, style=str(config["piece"]))
         message.append(" has joined the game!", style="white")
         self.message_log.write(message)
 
@@ -400,7 +388,11 @@ class GameScreen(Screen):
 
     def show_error(self, message):
 
-        self.log_message(f"[bold red]Invalid move:[/] {message}")
+
+        self.notify(
+            f"[bold yellow]Invalid move:[/] {message}",
+            severity="error"
+        )
 
 
     def refresh_board(self):
@@ -418,6 +410,12 @@ class GameScreen(Screen):
         )
 
         self.board_widget.update(board_text)
+
+
+    def action_cycle_piece(self):
+
+        if self.my_turn:
+            self.cycle_to_next_piece()
 
 
     def cycle_to_next_piece(self):
@@ -459,6 +457,10 @@ class GameScreen(Screen):
         self.refresh_board()
 
 
+    def action_focus_chat(self):
+        self.set_focus(self.chat_input)
+
+
     def on_click(self, event):
         chat_input = self.query_one("#chat_input")
 
@@ -488,10 +490,6 @@ class GameScreen(Screen):
 
                 self.refresh_board()
 
-        elif key == "tab":
-
-            self.cycle_to_next_piece()
-
         elif key == "space":
 
             proposed_path = self.selected_path + [self.cursor]
@@ -503,9 +501,9 @@ class GameScreen(Screen):
 
         elif key == "enter":
 
-            self.client.send({"type": "debug", "message": f"focused widget: {self.app.focused.id}"})
-            if self.app.focused.id == "chat_input":
-                return
+            if self.app.focused != None and self.app.focused.id == "chat_input":
+                    return
+
 
             if len(self.selected_path) >= 2:
 
@@ -517,13 +515,19 @@ class GameScreen(Screen):
 
             elif len(self.selected_path) == 1:
 
-                self.log_message("[bold red]Invalid move:[/] Select a tile to move to.")
+                self.notify(
+                    "[bold yellow]Invalid move:[/] Select a tile to move to.",
+                    severity="error"
+                )
 
             else:
 
-                self.log_message("[bold red]Invalid move:[/] Select a piece to move.")
+                self.notify(
+                    "[bold yellow]Invalid move:[/] Select a piece to move.",
+                    severity="error"
+                )
 
-        elif key == "escape" and self.app.focused.id == "chat_input":
+        elif key == "escape" and self.app.focused is not None and self.app.focused.id == "chat_input":
             self.app.set_focus(None)
 
         elif key == "escape" and self.selected_path:
