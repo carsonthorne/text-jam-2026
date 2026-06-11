@@ -470,10 +470,13 @@ class GameScreen(Screen):
 
     def on_key(self, event: Key):
 
+        key = event.key.lower()
+        if key == "escape" and self.app.focused is not None and self.app.focused.id == "chat_input":
+            self.app.set_focus(None)
+
         if not self.my_turn:
             return
 
-        key = event.key.lower()
 
         if key in DIRECTIONS:
 
